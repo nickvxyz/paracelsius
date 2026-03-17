@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --accent: #ff6b1a;
+  --accent-dim: #ff6b1a33;
+  --surface: #141414;
+  --surface-light: #1a1a1a;
+  --muted: #888888;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-muted: var(--muted);
+  --font-heading: var(--font-orbitron);
+  --font-body: var(--font-space-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), monospace;
+}
+
+/* Ember glow pulse animation */
+@keyframes ember-pulse {
+  0%, 100% {
+    box-shadow: 0 0 30px var(--accent-dim), 0 0 60px transparent;
+  }
+  50% {
+    box-shadow: 0 0 50px var(--accent-dim), 0 0 100px var(--accent-dim);
+  }
+}
+
+.ember-glow {
+  animation: ember-pulse 3s ease-in-out infinite;
+}
+
+/* Typing indicator */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.typing-dot:nth-child(1) { animation: typing-dot 1.4s ease-in-out infinite 0s; }
+.typing-dot:nth-child(2) { animation: typing-dot 1.4s ease-in-out infinite 0.2s; }
+.typing-dot:nth-child(3) { animation: typing-dot 1.4s ease-in-out infinite 0.4s; }
+
+/* Floating ember particles */
+@keyframes ember-float {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(var(--drift)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.ember-particle {
+  position: fixed;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ember-float var(--duration) ease-out infinite;
+  animation-delay: var(--delay);
+  left: var(--x);
+  filter: blur(0.5px);
+  z-index: 0;
 }
