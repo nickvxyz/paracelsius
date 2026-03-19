@@ -32,9 +32,6 @@ export default function Nav({ user, onSignOut }: NavProps) {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-5">
-          <Link href="/" className={linkClass("/")}>
-            Home
-          </Link>
           <Link href="/about" className={linkClass("/about")}>
             About
           </Link>
@@ -75,14 +72,6 @@ export default function Nav({ user, onSignOut }: NavProps) {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="sm:hidden relative z-20 border-t border-white/5 bg-background px-4 py-4 space-y-3">
-          <Link
-            href="/"
-            className={`block py-2 ${linkClass("/")}`}
-            onClick={() => setMenuOpen(false)}
-          >
-            Home
-          </Link>
-          <div className="border-t border-white/5" />
           <Link
             href="/about"
             className={`block py-2 ${linkClass("/about")}`}
