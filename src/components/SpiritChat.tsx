@@ -5,7 +5,6 @@ import DailyReceipt from "./DailyReceipt";
 import LifespanBar from "./LifespanBar";
 import ShockMoment from "./ShockMoment";
 import { usePortrait } from "@/lib/portrait-context";
-import Link from "next/link";
 
 const ALCH_GLYPHS = "\u263f\ud83d\udf0d\ud83d\udf14\ud83d\udf03\ud83d\udf02\ud83d\udf04\ud83d\udf01\u2609\u263d\ud83d\udf0f\u2295\u2644\u2234\u2235\u229b";
 
@@ -279,10 +278,19 @@ export default function SpiritChat({
     }
   }
 
+  const borderColor = "rgba(140,230,180,0.25)";
+
   return (
-    <div className="relative w-full max-w-xl pb-6 space-y-4 overflow-hidden">
-      {/* Messages */}
-      <div className="space-y-5 min-h-[120px] max-h-[50vh] overflow-y-auto overflow-x-hidden">
+    <div
+      className="relative w-full max-w-[800px] mx-auto flex flex-col overflow-hidden"
+      style={{
+        border: `1px solid ${borderColor}`,
+        maxHeight: "60vh",
+        minHeight: "300px",
+      }}
+    >
+      {/* ── Top: Message history ── */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-5">
         {messages.length === 0 && !isStreaming && (
           <p
             className="text-center text-sm pt-4"
@@ -301,7 +309,7 @@ export default function SpiritChat({
           <div key={i}>
             {msg.role === "user" ? (
               <div className="text-right">
-                <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words overflow-wrap-anywhere">
+                <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words" style={{ overflowWrap: "anywhere" }}>
                   {msg.content}
                 </span>
               </div>
@@ -379,11 +387,12 @@ export default function SpiritChat({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Paywall freeze overlay */}
+      {/* ── Paywall freeze overlay ── */}
       {dailyLimitHit && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
           <div
-            className="border border-accent/20 bg-surface p-6 space-y-4 max-w-sm mx-4"
+            className="border bg-surface p-6 space-y-4 max-w-sm mx-4"
+            style={{ borderColor }}
             role="alertdialog"
             aria-labelledby="paywall-title"
           >
@@ -409,10 +418,11 @@ export default function SpiritChat({
         </div>
       )}
 
-      {/* Input */}
+      {/* ── Bottom: Input bar ── */}
       <form
         onSubmit={handleSubmit}
-        className="flex border border-white/10 overflow-hidden"
+        className="flex shrink-0"
+        style={{ borderTop: `1px solid ${borderColor}` }}
       >
         <input
           ref={inputRef}
@@ -422,24 +432,28 @@ export default function SpiritChat({
           placeholder="Speak to the physician..."
           disabled={isStreaming || dailyLimitHit}
           aria-label="Message Paracelsus"
-          className="flex-1 bg-surface-light px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+          className="flex-1 min-w-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={isStreaming || dailyLimitHit || !input.trim()}
-          className="bg-accent px-5 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="shrink-0 w-[80px] sm:w-[100px] bg-accent py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+          style={{ borderLeft: `1px solid ${borderColor}` }}
         >
           Send
         </button>
       </form>
 
-      {/* Message counter */}
-      {remaining !== null && !dailyLimitHit && (
-        <p className="text-center text-xs text-muted">
-          {remaining > 0
-            ? `${remaining} free message${remaining !== 1 ? "s" : ""} remaining today`
-            : ""}
-        </p>
+      {/* Message counter — inside the panel */}
+      {remaining !== null && !dailyLimitHit && remaining > 0 && (
+        <div
+          className="shrink-0 text-center py-1.5"
+          style={{ borderTop: `1px solid ${borderColor}` }}
+        >
+          <p className="text-[10px] text-muted">
+            {remaining} free message{remaining !== 1 ? "s" : ""} remaining
+          </p>
+        </div>
       )}
     </div>
   );
