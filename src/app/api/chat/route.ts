@@ -1,0 +1,418 @@
+import { NextRequest } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createServiceClient } from "@/lib/supabase";
+import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const FREE_DAILY_LIMIT = 10;
+
+// ── Midnight reset helper ────────────────────────────────────────
+
+function getTodayKey(): string {
+  return new Date().toISOString().split("T")[0]; // "2026-03-19"
+}
+
+// ── LLM streaming ───────────────────────────────────────────────
+
+function streamLLMResponse(
+  systemPrompt: string,
+  conversationHistory: Array<{ role: string; parts: Array<{ text: string }> }>,
+  message: string,
+  onComplete?: (fullResponse: string) => Promise<void>
+) {
+  const encoder = new TextEncoder();
+
+  return new ReadableStream({
+    async start(controller) {
+      let fullResponse = "";
+
+      try {
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.5-flash",
+          systemInstruction: systemPrompt,
+        });
+
+        const result = await model.generateContentStream({
+          contents: conversationHistory.length > 0
+            ? conversationHistory
+            : [{ role: "user", parts: [{ text: message }] }],
+        });
+
+        for await (const chunk of result.stream) {
+          const text = chunk.text();
+          if (text) {
+            fullResponse += text;
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+            );
+          }
+        }
+
+        // Parse JSON commands from response
+        const jsonMatches = fullResponse.match(
+          /```json\s*\n(\{[^`]+\})\s*\n```/g
+        );
+        if (jsonMatches) {
+          for (const match of jsonMatches) {
+            const jsonStr = match
+              .replace(/```json\s*\n/, "")
+              .replace(/\s*\n```/, "");
+            try {
+              const parsed = JSON.parse(jsonStr);
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ command: parsed })}\n\n`
+                )
+              );
+            } catch {
+              // Invalid JSON in response, skip
+            }
+          }
+        }
+
+        if (onComplete) {
+          await onComplete(fullResponse);
+        }
+
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "LLM API error";
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ error: errorMessage })}\n\n`
+          )
+        );
+      } finally {
+        controller.close();
+      }
+    },
+  });
+}
+
+// ── Main handler ─────────────────────────────────────────────────
+
+export async function POST(req: NextRequest) {
+  const supabase = createServiceClient();
+
+  // ── Auth required ──
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return Response.json({ error: "Sign in required" }, { status: 401 });
+  }
+
+  const token = authHeader.slice(7);
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return Response.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  // ── Parse request ──
+  const { message } = await req.json();
+  if (!message?.trim()) {
+    return Response.json({ error: "Message required" }, { status: 400 });
+  }
+
+  // ── Bootstrap rows for new users ──
+  const { data: existingProfile } = await supabase
+    .from("patient_profiles")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!existingProfile) {
+    await supabase.from("patient_profiles").insert({
+      user_id: user.id,
+      lifespan_years: 94,
+      assessment_completed: false,
+      penalties: {},
+      penalty_advice: {},
+      conversation_state: { phase: "intro", categories_covered: [], committed_factors: [], declined_factors: [], current_coaching_factor: null, session_count: 0 },
+    });
+  }
+
+  // ── Check subscription & daily free message limit ──
+  let { data: sub } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!sub) {
+    const { data: newSub } = await supabase
+      .from("subscriptions")
+      .insert({
+        user_id: user.id,
+        status: "free",
+        free_messages_used: 0,
+        free_messages_limit: 10,
+        free_messages_date: getTodayKey(),
+      })
+      .select()
+      .single();
+    sub = newSub;
+  }
+
+  if (!sub) {
+    return Response.json({ error: "Failed to initialize subscription" }, { status: 500 });
+  }
+
+  const today = getTodayKey();
+  const isPaid = sub.status === "active";
+
+  if (!isPaid) {
+    // Reset counter at midnight
+    if (sub.free_messages_date !== today) {
+      await supabase
+        .from("subscriptions")
+        .update({ free_messages_used: 0, free_messages_date: today })
+        .eq("user_id", user.id);
+      sub.free_messages_used = 0;
+    }
+
+    if (sub.free_messages_used >= FREE_DAILY_LIMIT) {
+      return Response.json(
+        {
+          error: "daily_limit",
+          message: "You have used all 10 free messages for today. Subscribe for unlimited access, or return tomorrow.",
+          remaining: 0,
+          resets_at: "midnight",
+        },
+        { status: 402 }
+      );
+    }
+  }
+
+  // ── Save user message ──
+  await supabase.from("messages").insert({
+    user_id: user.id,
+    role: "user",
+    content: message.trim(),
+  });
+
+  // ── Increment free counter ──
+  if (!isPaid) {
+    await supabase
+      .from("subscriptions")
+      .update({ free_messages_used: sub.free_messages_used + 1 })
+      .eq("user_id", user.id);
+  }
+
+  // ── Get patient profile ──
+  const { data: patientProfile } = await supabase
+    .from("patient_profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  // ── Get recent messages for context ──
+  const { data: recentMessages } = await supabase
+    .from("messages")
+    .select("role, content")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  const conversationHistory =
+    recentMessages?.reverse().map((m) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }],
+    })) || [];
+
+  // ── Build system prompt ──
+  const isAssessment = !patientProfile?.assessment_completed;
+  const systemPrompt = buildSystemPrompt(
+    patientProfile as PatientProfile | null,
+    isAssessment,
+    isPaid
+  );
+
+  // ── Stream response ──
+  const stream = streamLLMResponse(
+    systemPrompt,
+    conversationHistory,
+    message.trim(),
+    async (fullResponse) => {
+      // Save assistant message
+      await supabase.from("messages").insert({
+        user_id: user.id,
+        role: "assistant",
+        content: fullResponse,
+        metadata: { model: "gemini-2.5-flash" },
+      });
+
+      // Parse and handle agent commands
+      const jsonMatches = fullResponse.match(
+        /```json\s*\n(\{[^`]+\})\s*\n```/g
+      );
+      if (jsonMatches) {
+        for (const match of jsonMatches) {
+          const jsonStr = match
+            .replace(/```json\s*\n/, "")
+            .replace(/\s*\n```/, "");
+          try {
+            const parsed = JSON.parse(jsonStr);
+            await handleAgentCommand(supabase, user.id, parsed);
+          } catch {
+            // Invalid JSON, skip
+          }
+        }
+      }
+    }
+  );
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleAgentCommand(supabase: any, userId: string, command: any) {
+  switch (command.type) {
+    case "assessment_result": {
+      await supabase
+        .from("patient_profiles")
+        .update({
+          lifespan_years: command.lifespan,
+          baseline_years: command.lifespan,
+          assessment_completed: true,
+          penalties: command.penalties || {},
+          penalty_advice: command.advice || {},
+          assessment_data: command,
+          conversation_state: { phase: "coaching", categories_covered: [], committed_factors: [], declined_factors: [], current_coaching_factor: null, session_count: 0 },
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      break;
+    }
+    case "lifespan_update": {
+      await supabase
+        .from("patient_profiles")
+        .update({
+          lifespan_years: command.new_lifespan,
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      const { data: profile } = await supabase
+        .from("patient_profiles")
+        .select("recovery_log")
+        .eq("user_id", userId)
+        .single();
+
+      const log = Array.isArray(profile?.recovery_log)
+        ? profile.recovery_log
+        : [];
+      log.push({
+        date: new Date().toISOString(),
+        delta: command.delta,
+        reason: command.reason,
+      });
+
+      await supabase
+        .from("patient_profiles")
+        .update({ recovery_log: log })
+        .eq("user_id", userId);
+      break;
+    }
+    case "factor_committed": {
+      // Update conversation state with committed factor
+      const { data: currentProfile } = await supabase
+        .from("patient_profiles")
+        .select("conversation_state")
+        .eq("user_id", userId)
+        .single();
+
+      const convState = currentProfile?.conversation_state || {};
+      const committed = Array.isArray(convState.committed_factors)
+        ? convState.committed_factors
+        : [];
+      if (!committed.includes(command.factor)) {
+        committed.push(command.factor);
+      }
+
+      await supabase
+        .from("patient_profiles")
+        .update({
+          conversation_state: {
+            ...convState,
+            committed_factors: committed,
+            current_coaching_factor: command.factor,
+          },
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      break;
+    }
+    case "categories_update": {
+      const { data: catProfile } = await supabase
+        .from("patient_profiles")
+        .select("conversation_state")
+        .eq("user_id", userId)
+        .single();
+
+      const catState = catProfile?.conversation_state || {};
+      const covered = Array.isArray(catState.categories_covered)
+        ? catState.categories_covered
+        : [];
+      const newCovered = command.covered || [];
+      for (const cat of newCovered) {
+        if (!covered.includes(cat)) {
+          covered.push(cat);
+        }
+      }
+
+      await supabase
+        .from("patient_profiles")
+        .update({
+          conversation_state: {
+            ...catState,
+            categories_covered: covered,
+            phase: "assessment",
+          },
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      break;
+    }
+    case "factor_declined": {
+      const { data: decProfile } = await supabase
+        .from("patient_profiles")
+        .select("conversation_state")
+        .eq("user_id", userId)
+        .single();
+
+      const decState = decProfile?.conversation_state || {};
+      const declined = Array.isArray(decState.declined_factors)
+        ? decState.declined_factors
+        : [];
+      if (!declined.includes(command.factor)) {
+        declined.push(command.factor);
+      }
+
+      await supabase
+        .from("patient_profiles")
+        .update({
+          conversation_state: {
+            ...decState,
+            declined_factors: declined,
+            current_coaching_factor: null,
+          },
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      break;
+    }
+    case "daily_receipt":
+    case "what_if":
+      break;
+  }
+}
