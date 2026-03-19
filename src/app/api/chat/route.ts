@@ -1,12 +1,10 @@
 import { NextRequest } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { createServiceClient } from "@/lib/supabase";
 import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const FREE_DAILY_LIMIT = 10;
-
-// ── Midnight reset helper ────────────────────────────────────────
 
 function getTodayKey(): string {
   return new Date().toISOString().split("T")[0];
@@ -16,7 +14,7 @@ function getTodayKey(): string {
 
 function streamLLMResponse(
   systemPrompt: string,
-  conversationHistory: Array<{ role: string; parts: Array<{ text: string }> }>,
+  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
   message: string,
   onComplete?: (fullResponse: string) => Promise<void>
 ) {
@@ -27,28 +25,33 @@ function streamLLMResponse(
       let fullResponse = "";
 
       try {
-        const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash",
-          systemInstruction: systemPrompt,
-        });
-
-        const result = await model.generateContentStream({
-          contents: conversationHistory.length > 0
+        const messages: Array<{ role: "user" | "assistant"; content: string }> =
+          conversationHistory.length > 0
             ? conversationHistory
-            : [{ role: "user", parts: [{ text: message }] }],
+            : [{ role: "user" as const, content: message }];
+
+        const stream = anthropic.messages.stream({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages,
         });
 
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) {
-            fullResponse += text;
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-            );
+        for await (const event of stream) {
+          if (
+            event.type === "content_block_delta" &&
+            event.delta.type === "text_delta"
+          ) {
+            const text = event.delta.text;
+            if (text) {
+              fullResponse += text;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              );
+            }
           }
         }
 
-        // Parse JSON commands from response
         const jsonMatches = fullResponse.match(
           /```json\s*\n(\{[^`]+\})\s*\n```/g
         );
@@ -95,7 +98,6 @@ function streamLLMResponse(
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient();
 
-  // ── Auth required ──
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return Response.json({ error: "Sign in required" }, { status: 401 });
@@ -111,7 +113,6 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid token" }, { status: 401 });
   }
 
-  // ── Parse request ──
   const { message } = await req.json();
   if (!message?.trim()) {
     return Response.json({ error: "Message required" }, { status: 400 });
@@ -135,7 +136,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // ── Check subscription & daily free message limit ──
   let { data: sub } = await supabase
     .from("subscriptions")
     .select("*")
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
       return Response.json(
         {
           error: "daily_limit",
-          message: "You have used all 10 free messages for today. Subscribe for unlimited access, or return tomorrow.",
+          message: "You have used all 10 free messages for today.",
           remaining: 0,
           resets_at: "midnight",
         },
@@ -186,14 +186,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Save user message ──
   await supabase.from("messages").insert({
     user_id: user.id,
     role: "user",
     content: message.trim(),
   });
 
-  // ── Increment free counter ──
   if (!isPaid) {
     await supabase
       .from("subscriptions")
@@ -201,14 +199,12 @@ export async function POST(req: NextRequest) {
       .eq("user_id", user.id);
   }
 
-  // ── Get patient profile ──
   const { data: patientProfile } = await supabase
     .from("patient_profiles")
     .select("*")
     .eq("user_id", user.id)
     .single();
 
-  // ── Get recent messages for context ──
   const { data: recentMessages } = await supabase
     .from("messages")
     .select("role, content")
@@ -216,13 +212,12 @@ export async function POST(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(15);
 
-  const conversationHistory =
+  const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> =
     recentMessages?.reverse().map((m) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content }],
+      role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
+      content: m.content,
     })) || [];
 
-  // ── Build system prompt ──
   const isAssessment = !patientProfile?.assessment_completed;
   const systemPrompt = buildSystemPrompt(
     patientProfile as PatientProfile | null,
@@ -230,7 +225,6 @@ export async function POST(req: NextRequest) {
     isPaid
   );
 
-  // ── Stream response ──
   const stream = streamLLMResponse(
     systemPrompt,
     conversationHistory,
@@ -240,7 +234,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         role: "assistant",
         content: fullResponse,
-        metadata: { model: "gemini-2.5-flash" },
+        metadata: { model: "claude-sonnet-4" },
       });
 
       const jsonMatches = fullResponse.match(
@@ -305,14 +299,8 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
         .eq("user_id", userId)
         .single();
 
-      const log = Array.isArray(profile?.recovery_log)
-        ? profile.recovery_log
-        : [];
-      log.push({
-        date: new Date().toISOString(),
-        delta: command.delta,
-        reason: command.reason,
-      });
+      const log = Array.isArray(profile?.recovery_log) ? profile.recovery_log : [];
+      log.push({ date: new Date().toISOString(), delta: command.delta, reason: command.reason });
 
       await supabase
         .from("patient_profiles")
@@ -328,21 +316,13 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
         .single();
 
       const convState = currentProfile?.conversation_state || {};
-      const committed = Array.isArray(convState.committed_factors)
-        ? convState.committed_factors
-        : [];
-      if (!committed.includes(command.factor)) {
-        committed.push(command.factor);
-      }
+      const committed = Array.isArray(convState.committed_factors) ? convState.committed_factors : [];
+      if (!committed.includes(command.factor)) committed.push(command.factor);
 
       await supabase
         .from("patient_profiles")
         .update({
-          conversation_state: {
-            ...convState,
-            committed_factors: committed,
-            current_coaching_factor: command.factor,
-          },
+          conversation_state: { ...convState, committed_factors: committed, current_coaching_factor: command.factor },
           last_interaction_at: new Date().toISOString(),
         })
         .eq("user_id", userId);
@@ -356,24 +336,15 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
         .single();
 
       const catState = catProfile?.conversation_state || {};
-      const covered = Array.isArray(catState.categories_covered)
-        ? catState.categories_covered
-        : [];
-      const newCovered = command.covered || [];
-      for (const cat of newCovered) {
-        if (!covered.includes(cat)) {
-          covered.push(cat);
-        }
+      const covered = Array.isArray(catState.categories_covered) ? catState.categories_covered : [];
+      for (const cat of (command.covered || [])) {
+        if (!covered.includes(cat)) covered.push(cat);
       }
 
       await supabase
         .from("patient_profiles")
         .update({
-          conversation_state: {
-            ...catState,
-            categories_covered: covered,
-            phase: "assessment",
-          },
+          conversation_state: { ...catState, categories_covered: covered, phase: "assessment" },
           last_interaction_at: new Date().toISOString(),
         })
         .eq("user_id", userId);
@@ -387,21 +358,13 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
         .single();
 
       const decState = decProfile?.conversation_state || {};
-      const declined = Array.isArray(decState.declined_factors)
-        ? decState.declined_factors
-        : [];
-      if (!declined.includes(command.factor)) {
-        declined.push(command.factor);
-      }
+      const declined = Array.isArray(decState.declined_factors) ? decState.declined_factors : [];
+      if (!declined.includes(command.factor)) declined.push(command.factor);
 
       await supabase
         .from("patient_profiles")
         .update({
-          conversation_state: {
-            ...decState,
-            declined_factors: declined,
-            current_coaching_factor: null,
-          },
+          conversation_state: { ...decState, declined_factors: declined, current_coaching_factor: null },
           last_interaction_at: new Date().toISOString(),
         })
         .eq("user_id", userId);
