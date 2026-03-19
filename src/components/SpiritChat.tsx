@@ -111,6 +111,7 @@ export default function SpiritChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
   const [dailyLimitHit, setDailyLimitHit] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -278,6 +279,26 @@ export default function SpiritChat({
     }
   }
 
+  async function handleSubscribe() {
+    setSubscribing(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await res.json();
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        alert(data.error || "Could not start checkout. Try again.");
+        setSubscribing(false);
+      }
+    } catch {
+      alert("Payment service unavailable. Try again later.");
+      setSubscribing(false);
+    }
+  }
+
   const borderColor = "rgba(140,230,180,0.25)";
 
   return (
@@ -406,12 +427,13 @@ export default function SpiritChat({
                 You have used all 10 free messages for today.
               </p>
             </div>
-            <a
-              href="#"
-              className="block w-full bg-accent py-3 text-center text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+            <button
+              onClick={handleSubscribe}
+              disabled={subscribing}
+              className="block w-full bg-accent py-3 text-center text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              Subscribe &mdash; $30/month
-            </a>
+              {subscribing ? "Redirecting..." : "Subscribe \u2014 $30/month"}
+            </button>
             <p className="text-center text-xs text-muted">
               Or return tomorrow for 10 more free messages
             </p>
