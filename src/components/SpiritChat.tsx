@@ -281,6 +281,7 @@ export default function SpiritChat({
   const borderColor = "rgba(140,230,180,0.25)";
 
   return (
+    <>
     <div
       className="relative w-full max-w-[800px] mx-auto flex flex-col overflow-hidden"
       style={{
@@ -444,18 +445,15 @@ export default function SpiritChat({
         </button>
       </form>
 
-      {/* Message counter — inside the panel */}
-      {remaining !== null && !dailyLimitHit && remaining > 0 && (
-        <div
-          className="shrink-0 text-center py-1.5"
-          style={{ borderTop: `1px solid ${borderColor}` }}
-        >
-          <p className="text-[10px] text-muted">
-            {remaining} free message{remaining !== 1 ? "s" : ""} remaining
-          </p>
-        </div>
-      )}
     </div>
+
+      {/* Message counter — outside the panel */}
+      {remaining !== null && !dailyLimitHit && remaining > 0 && (
+        <p className="text-center text-[10px] text-muted mt-2">
+          {remaining} free message{remaining !== 1 ? "s" : ""} remaining
+        </p>
+      )}
+    </>
   );
 }
 

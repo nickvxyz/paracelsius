@@ -230,7 +230,7 @@ export default function ProfilePage() {
         )}
 
         {/* ④ Chat — full width on mobile, contained on desktop */}
-        <div className="-mx-4 sm:mx-0">
+        <div className="-mx-2 sm:mx-0">
         <SpiritChat
           accessToken={session.access_token}
           assessmentCompleted={assessmentCompleted}
