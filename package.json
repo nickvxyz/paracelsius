@@ -1,5 +1,5 @@
 {
-  "name": "paracelsius",
+  "name": "paracelsus",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.99.2",
     "@vercel/analytics": "^2.0.1",
     "next": "16.1.7",
     "react": "19.2.3",
