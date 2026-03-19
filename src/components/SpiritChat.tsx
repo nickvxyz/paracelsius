@@ -81,7 +81,7 @@ function SpiritMessage({ content, isNew }: { content: string; isNew: boolean }) 
 
   return (
     <div
-      className="text-sm leading-relaxed whitespace-pre-wrap"
+      className="text-sm leading-relaxed whitespace-pre-wrap break-words max-w-full"
       style={{
         color: "rgba(160,240,190,0.9)",
         textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
@@ -280,9 +280,9 @@ export default function SpiritChat({
   }
 
   return (
-    <div className="relative w-full max-w-xl px-4 pb-6 space-y-4">
+    <div className="relative w-full max-w-xl pb-6 space-y-4 overflow-hidden">
       {/* Messages */}
-      <div className="space-y-5 min-h-[120px] max-h-[50vh] overflow-y-auto">
+      <div className="space-y-5 min-h-[120px] max-h-[50vh] overflow-y-auto overflow-x-hidden">
         {messages.length === 0 && !isStreaming && (
           <p
             className="text-center text-sm pt-4"
@@ -301,7 +301,7 @@ export default function SpiritChat({
           <div key={i}>
             {msg.role === "user" ? (
               <div className="text-right">
-                <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90">
+                <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words overflow-wrap-anywhere">
                   {msg.content}
                 </span>
               </div>

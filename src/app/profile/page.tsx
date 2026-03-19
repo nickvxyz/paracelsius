@@ -90,7 +90,7 @@ export default function ProfilePage() {
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <h1 className="font-heading text-2xl font-bold tracking-wider text-accent">
-              Patient File
+              Your Longevity Profile
             </h1>
           </div>
           <div className="flex items-center gap-2">

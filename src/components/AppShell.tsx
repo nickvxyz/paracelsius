@@ -15,7 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
       <Nav user={user} onSignOut={signOut} />
-      <main className="relative z-10 flex flex-col items-center">
+      <main className="relative z-10 flex flex-col items-center max-w-full overflow-x-hidden">
         {/* CRT Portrait — brand anchor, visible on ALL pages */}
         <div className="pt-2 portrait-container">
           <CRTPortrait ref={portraitRef} />

@@ -1,22 +1,22 @@
 import { NextRequest } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { createServiceClient } from "@/lib/supabase";
 import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 const FREE_DAILY_LIMIT = 10;
 
 // ── Midnight reset helper ────────────────────────────────────────
 
 function getTodayKey(): string {
-  return new Date().toISOString().split("T")[0]; // "2026-03-19"
+  return new Date().toISOString().split("T")[0];
 }
 
 // ── LLM streaming ───────────────────────────────────────────────
 
 function streamLLMResponse(
   systemPrompt: string,
-  conversationHistory: Array<{ role: string; parts: Array<{ text: string }> }>,
+  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
   message: string,
   onComplete?: (fullResponse: string) => Promise<void>
 ) {
@@ -27,24 +27,30 @@ function streamLLMResponse(
       let fullResponse = "";
 
       try {
-        const model = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash",
-          systemInstruction: systemPrompt,
-        });
-
-        const result = await model.generateContentStream({
-          contents: conversationHistory.length > 0
+        const messages: Array<{ role: "user" | "assistant"; content: string }> =
+          conversationHistory.length > 0
             ? conversationHistory
-            : [{ role: "user", parts: [{ text: message }] }],
+            : [{ role: "user" as const, content: message }];
+
+        const stream = anthropic.messages.stream({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages,
         });
 
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          if (text) {
-            fullResponse += text;
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-            );
+        for await (const event of stream) {
+          if (
+            event.type === "content_block_delta" &&
+            event.delta.type === "text_delta"
+          ) {
+            const text = event.delta.text;
+            if (text) {
+              fullResponse += text;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              );
+            }
           }
         }
 
@@ -217,10 +223,10 @@ export async function POST(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(15);
 
-  const conversationHistory =
+  const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> =
     recentMessages?.reverse().map((m) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content }],
+      role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
+      content: m.content,
     })) || [];
 
   // ── Build system prompt ──
@@ -242,7 +248,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         role: "assistant",
         content: fullResponse,
-        metadata: { model: "gemini-2.5-flash" },
+        metadata: { model: "claude-sonnet-4" },
       });
 
       // Parse and handle agent commands
@@ -324,7 +330,6 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
       break;
     }
     case "factor_committed": {
-      // Update conversation state with committed factor
       const { data: currentProfile } = await supabase
         .from("patient_profiles")
         .select("conversation_state")

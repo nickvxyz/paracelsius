@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/hooks";
 import EtherText from "@/components/EtherText";
-import AuthDropdown from "@/components/AuthDropdown";
+import AuthOverlay from "@/components/AuthOverlay";
 
 const INTRO_LINES = [
   "The signal is weak... but I am here. I am Paracelsus.",
@@ -20,6 +20,7 @@ function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [patientCount, setPatientCount] = useState<number | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
 
   const authError = searchParams.get("error");
 
@@ -59,7 +60,7 @@ function HomeContent() {
 
   // Landing page
   return (
-    <div className="flex flex-col items-center gap-4 px-4 pb-12">
+    <div className="flex flex-col items-center gap-4 px-4 pb-12 max-w-full overflow-hidden">
       {authError && (
         <p
           className="text-sm text-center leading-6 mb-2"
@@ -90,13 +91,14 @@ function HomeContent() {
         </p>
       )}
 
-      <AuthDropdown
-        trigger={
-          <button className="mt-2 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90">
-            Sign In
-          </button>
-        }
-      />
+      <button
+        onClick={() => setAuthOpen(true)}
+        className="mt-2 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+      >
+        Sign In
+      </button>
+
+      <AuthOverlay open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }
