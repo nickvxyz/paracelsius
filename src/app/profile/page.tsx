@@ -60,14 +60,28 @@ export default function ProfilePage() {
 
   if (!user || !session) return null;
 
-  const currentLifespan = lifespanYears ?? (profile?.lifespan_years as number) ?? 94;
+  const rawLifespan = lifespanYears ?? (profile?.lifespan_years as number) ?? 94;
+  const currentLifespan = isNaN(rawLifespan) ? 94 : rawLifespan;
   const baselineYears = (profile?.baseline_years as number) ?? null;
   const assessmentCompleted = (profile?.assessment_completed as boolean) ?? false;
-  const penalties = (profile?.penalties as Record<string, number>) ?? {};
   const penaltyAdvice = (profile?.penalty_advice as Record<string, string>) ?? {};
   const convState = (profile?.conversation_state as { committed_factors?: string[] }) ?? {};
   const committedFactors = convState.committed_factors || [];
-  const penaltyEntries = Object.entries(penalties).sort(([, a], [, b]) => (b as number) - (a as number));
+
+  // Normalize penalties — handle both flat object and array formats
+  const rawPenalties = profile?.penalties;
+  let penaltiesNormalized: Record<string, number> = {};
+  if (Array.isArray(rawPenalties)) {
+    for (const p of rawPenalties as Array<{ factor?: string; name?: string; years_lost?: number; penalty?: number }>) {
+      const key = (p.factor || p.name || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+      penaltiesNormalized[key] = p.years_lost ?? p.penalty ?? 0;
+    }
+  } else if (rawPenalties && typeof rawPenalties === "object") {
+    penaltiesNormalized = rawPenalties as Record<string, number>;
+  }
+  const penaltyEntries = Object.entries(penaltiesNormalized)
+    .filter(([, v]) => typeof v === "number" && v > 0)
+    .sort(([, a], [, b]) => b - a);
   const nameToShow = displayName || (user.email?.split("@")[0] ?? "Patient");
 
   return (

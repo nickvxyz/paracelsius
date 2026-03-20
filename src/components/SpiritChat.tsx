@@ -196,7 +196,7 @@ export default function SpiritChat({
               });
             }
             if (parsed.command) {
-              if (parsed.command.type === "assessment_result") { onAssessmentComplete(parsed.command); onLifespanUpdate(parsed.command.lifespan); }
+              if (parsed.command.type === "assessment_result") { onAssessmentComplete(parsed.command); onLifespanUpdate(parsed.command.lifespan ?? parsed.command.projected_lifespan ?? 94); }
               else if (parsed.command.type === "lifespan_update") { onLifespanUpdate(parsed.command.new_lifespan); }
               setMessages((prev) => {
                 const u = [...prev]; const l = u[u.length - 1];
@@ -288,7 +288,7 @@ export default function SpiritChat({
 
               {msg.commands?.map((cmd, j) => (
                 <div key={j} className="mt-3">
-                  {cmd.type === "assessment_result" && <ShockMoment years={cmd.lifespan as number} />}
+                  {cmd.type === "assessment_result" && <ShockMoment years={(cmd.lifespan ?? cmd.projected_lifespan ?? 94) as number} />}
                   {cmd.type === "lifespan_update" && (
                     <div className="space-y-2">
                       <div className="text-center">

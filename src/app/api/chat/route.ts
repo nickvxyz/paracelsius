@@ -259,14 +259,37 @@ export async function POST(req: NextRequest) {
 async function handleAgentCommand(supabase: any, userId: string, command: any) {
   switch (command.type) {
     case "assessment_result": {
+      // Normalize lifespan — Gemini may use "lifespan" or "projected_lifespan"
+      const lifespan = command.lifespan ?? command.projected_lifespan ?? 94;
+
+      // Normalize penalties — Gemini may return array [{factor, years_lost}] or flat object {factor: number}
+      let penaltiesFlat: Record<string, number> = {};
+      let adviceFlat: Record<string, string> = {};
+      const rawPenalties = command.penalties || [];
+
+      if (Array.isArray(rawPenalties)) {
+        // Array format: [{factor: "Smoking", years_lost: 10, details: "..."}]
+        for (const p of rawPenalties) {
+          const key = (p.factor || p.name || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+          penaltiesFlat[key] = p.years_lost ?? p.penalty ?? 0;
+          if (p.details || p.advice) {
+            adviceFlat[key] = p.details || p.advice;
+          }
+        }
+      } else if (typeof rawPenalties === "object") {
+        // Flat format: {smoking: 8, exercise: 5}
+        penaltiesFlat = rawPenalties;
+        adviceFlat = command.advice || {};
+      }
+
       await supabase
         .from("patient_profiles")
         .update({
-          lifespan_years: command.lifespan,
-          baseline_years: command.lifespan,
+          lifespan_years: lifespan,
+          baseline_years: lifespan,
           assessment_completed: true,
-          penalties: command.penalties || {},
-          penalty_advice: command.advice || {},
+          penalties: penaltiesFlat,
+          penalty_advice: adviceFlat,
           assessment_data: command,
           conversation_state: { phase: "coaching", categories_covered: [], committed_factors: [], declined_factors: [], current_coaching_factor: null, session_count: 0 },
           last_interaction_at: new Date().toISOString(),
