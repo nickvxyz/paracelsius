@@ -206,14 +206,10 @@ export default function SpiritChat({
       >
         {messages.length === 0 && !isStreaming && (
           <div className="text-center pt-4 space-y-2" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
-            <p className="text-sm">
-              {assessmentCompleted ? "Speak, and Paracelsus will answer." : "Start your longevity examination."}
+            <p className="text-sm">Start your longevity examination.</p>
+            <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+              Paracelsus will assess 17 lifestyle factors from Dr. Zolman&apos;s protocol and calculate your projected lifespan.
             </p>
-            {!assessmentCompleted && (
-              <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
-                Paracelsus will assess 17 lifestyle factors from Dr. Zolman&apos;s protocol and calculate your projected lifespan.
-              </p>
-            )}
           </div>
         )}
 
