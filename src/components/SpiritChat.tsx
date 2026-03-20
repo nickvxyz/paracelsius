@@ -353,7 +353,7 @@ export default function SpiritChat({
           <div className="max-w-[800px] mx-auto px-3 py-1 bg-background">
             <div className="flex items-center gap-2 text-[10px] text-muted">
               <span className="shrink-0">{localUsed}/{freeMessagesLimit} free messages</span>
-              <div className="w-16 h-[2px] bg-white/5 overflow-hidden shrink-0">
+              <div className="flex-1 h-[2px] bg-white/5 overflow-hidden">
                 <div
                   className="h-full bg-accent/50 transition-all"
                   style={{ width: `${(localUsed / freeMessagesLimit) * 100}%` }}
