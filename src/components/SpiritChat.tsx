@@ -56,7 +56,7 @@ export default function SpiritChat({
   const [kbOffset, setKbOffset] = useState(0);
   const [localUsed, setLocalUsed] = useState(freeMessagesUsed);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const portraitRef = usePortrait();
 
   // Sync when prop changes (e.g. page refresh)
@@ -190,7 +190,7 @@ export default function SpiritChat({
   }
 
   const borderColor = "rgba(140,230,180,0.25)";
-  const inputBarH = 80; // form + bankr-style counter + subscribe row
+  const inputBarH = 95; // textarea form + counter
 
   /*
    * Layout: the parent provides full height via flex.
@@ -205,12 +205,13 @@ export default function SpiritChat({
         style={{ paddingBottom: `${inputBarH + 12}px` }}
       >
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center pt-4" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
-            {assessmentCompleted ? (
-              <p className="text-sm">Speak, and Paracelsus will answer.</p>
-            ) : (
-              <p className="text-sm max-w-xs mx-auto leading-relaxed">
-                Start your longevity examination. Paracelsus will assess 17 lifestyle factors and calculate your projected lifespan.
+          <div className="text-center pt-4 space-y-2" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
+            <p className="text-sm">
+              {assessmentCompleted ? "Speak, and Paracelsus will answer." : "Start your longevity examination."}
+            </p>
+            {!assessmentCompleted && (
+              <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+                Paracelsus will assess 17 lifestyle factors from Dr. Zolman&apos;s protocol and calculate your projected lifespan.
               </p>
             )}
           </div>
@@ -220,8 +221,8 @@ export default function SpiritChat({
           {messages.map((msg, i) => (
             <div key={i}>
               {msg.role === "user" ? (
-                <div className="text-right">
-                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words" style={{ overflowWrap: "anywhere" }}>
+                <div className="text-left">
+                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -316,22 +317,36 @@ export default function SpiritChat({
           transition: kbOffset > 0 ? "none" : "bottom 0.15s ease-out",
         }}
       >
-        <div className="max-w-[800px] mx-auto bg-background border-t border-white/10">
-          <form onSubmit={handleSubmit} className="flex items-center">
-            <input
+        <div className="max-w-[800px] mx-auto bg-background" style={{ borderTop: `1px solid ${borderColor}`, borderBottom: `1px solid ${borderColor}` }}>
+          <form onSubmit={handleSubmit} className="flex items-end">
+            <textarea
               ref={inputRef}
-              type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-grow
+                e.target.style.height = "auto";
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               placeholder="Speak to Paracelsus..."
               disabled={isStreaming || dailyLimitHit}
               aria-label="Message Paracelsus"
-              className="flex-1 min-w-0 bg-transparent px-3 py-3 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+              rows={2}
+              className="flex-1 min-w-0 bg-transparent px-3 py-4 text-base text-foreground focus:outline-none disabled:opacity-50 resize-none"
+              style={{
+                maxHeight: "120px",
+              }}
             />
             <button
               type="submit"
               disabled={isStreaming || dailyLimitHit || !input.trim()}
-              className="shrink-0 px-4 py-3 text-xs font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
+              className="shrink-0 px-4 py-4 text-xs font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
             >
               Send
             </button>
@@ -341,8 +356,8 @@ export default function SpiritChat({
         {remaining !== null && !dailyLimitHit && (
           <div className="max-w-[800px] mx-auto px-3 py-1 bg-background">
             <div className="flex items-center gap-2 text-[10px] text-muted">
-              <span className="shrink-0">{localUsed}/{freeMessagesLimit} used</span>
-              <div className="flex-1 h-[2px] bg-white/5 overflow-hidden">
+              <span className="shrink-0">{localUsed}/{freeMessagesLimit} free messages</span>
+              <div className="w-16 h-[2px] bg-white/5 overflow-hidden shrink-0">
                 <div
                   className="h-full bg-accent/50 transition-all"
                   style={{ width: `${(localUsed / freeMessagesLimit) * 100}%` }}

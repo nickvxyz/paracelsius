@@ -41,6 +41,12 @@ input, textarea, select {
   font-size: 16px !important;
 }
 
+/* Placeholder styled like spirit text — shadowed, muted */
+textarea::placeholder {
+  color: rgba(140,230,180,0.35);
+  text-shadow: 0 0 6px rgba(140,230,180,0.1);
+}
+
 /* Auth overlay fade-in */
 @keyframes fade-in {
   from { opacity: 0; }
