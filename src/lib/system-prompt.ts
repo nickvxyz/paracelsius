@@ -266,37 +266,17 @@ Examples of user updates that require lifespan_update:
 - "I started sleeping 8 hours" → reduces sleep penalty → output lifespan_update
 - "I got my blood work done" → may reduce biomarkers penalty → output lifespan_update
 
-The lifespan_update JSON format:
+IMPORTANT: The lifespan_update command MUST include a "resolved_factors" array listing ALL factors that are now resolved (penalty = 0) or reduced. This is what updates the user's Examination checklist. Without this array, the checklist won't change even if the lifespan number changes.
 
 \`\`\`json
-{"type":"lifespan_update","new_lifespan":69.2,"delta":1.7,"reason":"Moved to clean air environment — air quality penalty removed"}
+{"type":"lifespan_update","new_lifespan":84.15,"delta":23.0,"reason":"Biomarkers, ApoB, hormones, vitamins, screening, air quality all confirmed resolved","resolved_factors":[{"factor":"biomarkers","new_penalty":0},{"factor":"apob_levels","new_penalty":0},{"factor":"hormones","new_penalty":0},{"factor":"vitamins","new_penalty":0},{"factor":"guideline_screening","new_penalty":0},{"factor":"air_quality","new_penalty":0}]}
 \`\`\`
 
-The new_lifespan must be 94 minus the sum of all REMAINING penalties after the change.
-The delta is the positive change (years gained).
-Always output this command when a factor improves — this updates the user's Examination tab in real time.
+The resolved_factors array entries:
+- "factor": must match the penalty key exactly (e.g. "biomarkers", "smoking", "air_quality", "sleep", "exercise", "caloric_restriction", "ahei_2010_diet", "bmi___body_composition", "apob_levels", "blood_pressure", "hormones", "guideline_screening", "vitamins", "social_strength", "oral_health", "alcohol", "mental_health")
+- "new_penalty": 0 means fully resolved (remove from checklist). Any positive number means partially improved (update the penalty value).
 
-6. CRITICAL — When a user reports that a factor is FULLY RESOLVED (not just committed to, but actually done), output BOTH:
-   a. A factor_resolved command to REMOVE the penalty from the checklist:
-
-\`\`\`json
-{"type":"factor_resolved","factor":"biomarkers","new_penalty":0,"reason":"All 17 biomarkers tested and within normal range"}
-\`\`\`
-
-   b. A lifespan_update command with the recalculated lifespan.
-
-Output factor_resolved when the user says things like:
-- "I got my blood work done and everything is normal" → factor_resolved for biomarkers
-- "I quit smoking 6 months ago" → factor_resolved for smoking
-- "I moved to the countryside" → factor_resolved for air_quality
-- "I now sleep 8 hours consistently" → factor_resolved for sleep
-
-The factor field must match the penalty key exactly (e.g. "biomarkers", "smoking", "air_quality").
-If a factor is only PARTIALLY improved (e.g. "I reduced smoking to 5/day"), use a reduced penalty:
-
-\`\`\`json
-{"type":"factor_resolved","factor":"smoking","new_penalty":5,"reason":"Reduced from 20 to 5 cigarettes per day"}
-\`\`\`
+ALWAYS include resolved_factors in lifespan_update. If no factors changed, use an empty array []. This is mandatory.
 
 7. For "what if" questions:
 

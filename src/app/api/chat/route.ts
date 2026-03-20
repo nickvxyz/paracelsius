@@ -298,26 +298,62 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
       break;
     }
     case "lifespan_update": {
-      await supabase
+      // Get current profile to update penalties + recovery log
+      const { data: luProfile } = await supabase
         .from("patient_profiles")
-        .update({
-          lifespan_years: command.new_lifespan,
-          last_interaction_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId);
-
-      const { data: profile } = await supabase
-        .from("patient_profiles")
-        .select("recovery_log")
+        .select("penalties, penalty_advice, recovery_log, conversation_state")
         .eq("user_id", userId)
         .single();
 
-      const log = Array.isArray(profile?.recovery_log) ? profile.recovery_log : [];
+      const updateData: Record<string, unknown> = {
+        lifespan_years: command.new_lifespan,
+        last_interaction_at: new Date().toISOString(),
+      };
+
+      // Process resolved_factors — update/remove penalties from checklist
+      const resolvedFactors = command.resolved_factors;
+      if (Array.isArray(resolvedFactors) && resolvedFactors.length > 0) {
+        let penObj = { ...(luProfile?.penalties || {}) } as Record<string, number>;
+        let advObj = { ...(luProfile?.penalty_advice || {}) } as Record<string, string>;
+        const convState = luProfile?.conversation_state || {};
+        const committed = Array.isArray(convState.committed_factors) ? [...convState.committed_factors] : [];
+
+        // Normalize if legacy array format
+        if (Array.isArray(luProfile?.penalties)) {
+          penObj = {};
+          advObj = {};
+          for (const p of luProfile.penalties as Array<{ factor?: string; years_lost?: number; details?: string }>) {
+            const key = (p.factor || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+            penObj[key] = p.years_lost ?? 0;
+            if (p.details) advObj[key] = p.details;
+          }
+        }
+
+        for (const rf of resolvedFactors) {
+          const factor = rf.factor;
+          const newPenalty = rf.new_penalty ?? 0;
+          if (newPenalty <= 0) {
+            delete penObj[factor];
+            delete advObj[factor];
+          } else {
+            penObj[factor] = newPenalty;
+          }
+          if (!committed.includes(factor)) committed.push(factor);
+        }
+
+        updateData.penalties = penObj;
+        updateData.penalty_advice = advObj;
+        updateData.conversation_state = { ...convState, committed_factors: committed };
+      }
+
+      // Append to recovery log
+      const log = Array.isArray(luProfile?.recovery_log) ? luProfile.recovery_log : [];
       log.push({ date: new Date().toISOString(), delta: command.delta, reason: command.reason });
+      updateData.recovery_log = log;
 
       await supabase
         .from("patient_profiles")
-        .update({ recovery_log: log })
+        .update(updateData)
         .eq("user_id", userId);
       break;
     }
