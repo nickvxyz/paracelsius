@@ -6,8 +6,6 @@ import LifespanBar from "./LifespanBar";
 import ShockMoment from "./ShockMoment";
 import { usePortrait } from "@/lib/portrait-context";
 
-const ALCH_GLYPHS = "\u263f\ud83d\udf0d\ud83d\udf14\ud83d\udf03\ud83d\udf02\ud83d\udf04\ud83d\udf01\u2609\u263d\ud83d\udf0f\u2295\u2644\u2234\u2235\u229b";
-
 // ── Types ────────────────────────────────────────────────────────
 
 interface AgentCommand {
@@ -35,52 +33,6 @@ interface SpiritChatProps {
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
 
-// ── Scramble text ────────────────────────────────────────────────
-
-function ScrambleText({ text, onComplete }: { text: string; onComplete?: () => void }) {
-  const [resolved, setResolved] = useState(0);
-  const [, setTick] = useState(0);
-
-  useEffect(() => {
-    if (!text) return;
-    let charIdx = 0;
-    let pass = 0;
-    const interval = setInterval(() => {
-      pass++;
-      if (pass >= 2) { charIdx++; pass = 0; setResolved(charIdx); }
-      setTick((t) => t + 1);
-      if (charIdx >= text.length) { clearInterval(interval); onComplete?.(); }
-    }, 15);
-    return () => clearInterval(interval);
-  }, [text, onComplete]);
-
-  return (
-    <span>
-      {text.split("").map((ch, i) => {
-        if (i < resolved) return ch;
-        if (ch === " ") return " ";
-        return <span key={i} style={{ opacity: 0.6 }}>{ALCH_GLYPHS[Math.floor(Math.random() * ALCH_GLYPHS.length)]}</span>;
-      })}
-    </span>
-  );
-}
-
-// ── Spirit message ───────────────────────────────────────────────
-
-function SpiritMessage({ content }: { content: string; isNew: boolean }) {
-  if (!content) return null;
-  return (
-    <div
-      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-      style={{
-        color: "rgba(160,240,190,0.9)",
-        textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
-      }}
-    >
-      {content}
-    </div>
-  );
-}
 
 // ── Main component ───────────────────────────────────────────────
 
@@ -283,7 +235,15 @@ export default function SpiritChat({
                     style={{ border: "1px solid rgba(140,230,180,0.2)" }}
                   />
                   <div className="min-w-0 flex-1">
-                    <SpiritMessage content={renderContent(msg.content)} isNew={i === messages.length - 1 && !isStreaming} />
+                    <div
+                      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                      style={{
+                        color: "rgba(160,240,190,0.9)",
+                        textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
+                      }}
+                    >
+                      {renderContent(msg.content)}
+                    </div>
                   </div>
                 </div>
               )}
