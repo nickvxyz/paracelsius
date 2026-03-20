@@ -9,11 +9,13 @@
 **Depends on:** Suby.fi account setup and API links.
 **Effort:** S (human: ~4 hrs / CC: ~15 min)
 
-### Custom Domain — Update Google OAuth Origins
-**What:** When a custom domain is added, update Google Cloud Console OAuth credentials to include the new domain in both Authorized JavaScript Origins and Authorized Redirect URIs.
-**Why:** Google OAuth will reject requests from origins not in the allowlist.
-**Context:** Currently only `https://paracelsius.vercel.app` is authorized. Add the custom domain as a second entry in Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID.
-**Depends on:** Custom domain purchase and DNS setup.
+### Custom Domain — Update Google OAuth Origins (MANUAL — Nick)
+**What:** Add `paracelsus.live` to Google Cloud Console OAuth credentials.
+**Why:** Google OAuth will reject sign-in requests from the new domain until added.
+**Context:** Domain `paracelsus.live` is live on Vercel. Supabase auth already updated. Google Console still only has `paracelsius.vercel.app`.
+**Add to Authorized JavaScript Origins:** `https://paracelsus.live`
+**Add to Authorized Redirect URIs:** `https://paracelsus.live/api/auth/callback`
+**Where:** Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID
 **Effort:** XS (~2 min, manual in Google Console)
 
 ### Chat History Loading on Mount
