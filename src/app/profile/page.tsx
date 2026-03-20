@@ -53,7 +53,7 @@ export default function ProfilePage() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-sm" style={{ color: "rgba(140,230,180,0.6)", textShadow: "0 0 8px rgba(140,230,180,0.2)" }}>
-          The physician is preparing...
+          Paracelsus is preparing...
         </p>
       </div>
     );

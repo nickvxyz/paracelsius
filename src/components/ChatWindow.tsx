@@ -87,7 +87,7 @@ export default function ChatWindow({
           ...prev,
           {
             role: "assistant",
-            content: `*The physician's connection falters.* ${err.error || "An error occurred."}`,
+            content: `*Paracelsus's connection falters.* ${err.error || "An error occurred."}`,
           },
         ]);
         setIsStreaming(false);
@@ -182,7 +182,7 @@ export default function ChatWindow({
         {
           role: "assistant",
           content:
-            "*The physician is momentarily unreachable. The connection between centuries is unstable. Try again.*",
+            "*Paracelsus is momentarily unreachable. The connection between centuries is unstable. Try again.*",
         },
       ]);
     } finally {
@@ -204,8 +204,8 @@ export default function ChatWindow({
           <div className="text-center mt-32 space-y-3">
             <p className="text-muted text-sm">
               {assessmentCompleted
-                ? "Speak, and the physician shall answer."
-                : "The physician awaits your first words to begin the examination."}
+                ? "Speak, and Paracelsus shall answer."
+                : "Paracelsus awaits your first words to begin the examination."}
             </p>
             {!assessmentCompleted && (
               <p className="text-accent/60 text-xs">
@@ -318,7 +318,7 @@ export default function ChatWindow({
           onChange={(e) => setInput(e.target.value)}
           placeholder={
             assessmentCompleted
-              ? "Ask the physician..."
+              ? "Ask Paracelsus..."
               : "Say hello to begin your examination..."
           }
           disabled={isStreaming}

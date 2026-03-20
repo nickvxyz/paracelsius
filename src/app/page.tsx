@@ -47,7 +47,7 @@ function HomeContent() {
             textShadow: "0 0 8px rgba(140,230,180,0.2)",
           }}
         >
-          The physician is preparing...
+          Paracelsus is preparing...
         </p>
       </div>
     );
@@ -119,7 +119,7 @@ export default function Home() {
               textShadow: "0 0 8px rgba(140,230,180,0.2)",
             }}
           >
-            The physician is preparing...
+            Paracelsus is preparing...
           </p>
         </div>
       }

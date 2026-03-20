@@ -23,7 +23,7 @@ Musculoskeletal health: proper training form, warm-ups, mobility work, physiothe
 
 ### 5. Avoiding Harm
 Avoid unproven therapies, quack practitioners, dangerous supplements, high-risk environments. Evidence-based medicine only.
-**Paracelsus note:** "In my era, physicians killed more patients than the plague. Insist on evidence."
+**Paracelsus note:** "In my era, physicians killed more individuals than the plague. Insist on evidence."
 
 ### 6. Evidence-Based Medicine Skills
 Learn to evaluate health claims. Understand study design (RCT vs observational), effect sizes, conflict of interest. Use guideline-based calculators for personalized screening.
