@@ -174,6 +174,8 @@ export default function SpiritChat({
     } finally {
       setIsStreaming(false);
       inputRef.current?.focus();
+      // Delayed refresh — gives server time to process commands and write to DB
+      setTimeout(() => { onLifespanUpdate(lifespanYears); }, 2000);
     }
   }
 
