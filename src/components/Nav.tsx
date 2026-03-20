@@ -70,11 +70,10 @@ export default function Nav({ user, onSignOut }: NavProps) {
           <span className={`block w-5 h-[1.5px] bg-foreground transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
           <span className={`block w-5 h-[1.5px] bg-foreground transition-transform ${menuOpen ? "-rotate-45 -translate-y-[5px]" : ""}`} />
         </button>
-      </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — overlays content */}
       {menuOpen && (
-        <div className="sm:hidden relative z-20 border-t border-white/5 bg-background px-4 py-4 space-y-3">
+        <div className="sm:hidden absolute left-0 right-0 top-full z-30 border-t border-white/5 bg-background px-4 py-4 space-y-3 shadow-lg">
           <Link
             href={user ? "/profile" : "/"}
             className={`block py-2 ${linkClass(user ? "/profile" : "/")}`}
@@ -127,6 +126,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
           )}
         </div>
       )}
+      </nav>
 
       {/* Auth overlay */}
       <AuthOverlay open={authOpen} onClose={() => setAuthOpen(false)} />
