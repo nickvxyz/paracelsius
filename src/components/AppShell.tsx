@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/hooks";
 import { PortraitProvider } from "@/lib/portrait-context";
 import Nav from "./Nav";
@@ -10,28 +11,31 @@ import CRTPortrait, { type CRTPortraitHandle } from "./CRTPortrait";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const portraitRef = useRef<CRTPortraitHandle>(null);
+  const pathname = usePathname();
+
+  const isProfile = pathname === "/profile";
 
   return (
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
       <div className="flex flex-col h-[100dvh] overflow-hidden">
-        {/* Nav — fixed height */}
+        {/* Nav */}
         <Nav user={user} onSignOut={signOut} />
 
-        {/* Main — fills remaining space */}
+        {/* Main */}
         <main className="relative z-10 flex flex-col items-center flex-1 min-h-0">
-          {/* CRT Portrait — compact */}
-          <div className="shrink-0 portrait-container">
+          {/* CRT Portrait — hidden on mobile profile, shown elsewhere */}
+          <div className={`shrink-0 portrait-container ${isProfile ? "hidden sm:block" : ""}`}>
             <CRTPortrait ref={portraitRef} />
           </div>
-          {/* Page content — fills remaining space */}
+          {/* Page content */}
           <div className="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
             {children}
           </div>
         </main>
 
-        {/* Footer — compact, always at bottom */}
-        <footer className="relative z-10 shrink-0 border-t border-white/5 py-2 px-4">
+        {/* Footer — hidden on mobile profile */}
+        <footer className={`relative z-10 shrink-0 border-t border-white/5 py-2 px-4 ${isProfile ? "hidden sm:block" : ""}`}>
           <div className="max-w-2xl mx-auto flex items-center justify-between text-[10px] text-muted">
             <span>&copy; {new Date().getFullYear()} Paracelsus</span>
             <div className="flex gap-3">
