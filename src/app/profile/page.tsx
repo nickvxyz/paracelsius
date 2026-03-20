@@ -69,10 +69,11 @@ export default function ProfilePage() {
     return (
       <TermsConsent
         userId={user.id}
+        accessToken={session.access_token}
         onAccepted={() => refreshProfile()}
         onDeclined={async () => {
-          const { signOut } = await import("@/lib/supabase").then(m => ({ signOut: () => m.supabase.auth.signOut() }));
-          await signOut();
+          const { supabase: sb } = await import("@/lib/supabase");
+          await sb.auth.signOut();
           window.location.href = "/";
         }}
       />

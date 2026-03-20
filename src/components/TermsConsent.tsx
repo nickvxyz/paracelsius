@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 interface TermsConsentProps {
   userId: string;
+  accessToken: string;
   onAccepted: () => void;
   onDeclined: () => void;
 }
 
-export default function TermsConsent({ userId, onAccepted, onDeclined }: TermsConsentProps) {
+export default function TermsConsent({ accessToken, onAccepted, onDeclined }: TermsConsentProps) {
   const [tosChecked, setTosChecked] = useState(false);
   const [emailChecked, setEmailChecked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -18,14 +18,25 @@ export default function TermsConsent({ userId, onAccepted, onDeclined }: TermsCo
     if (!tosChecked) return;
     setSubmitting(true);
 
-    await supabase
-      .from("patient_profiles")
-      .update({
-        tos_accepted_at: new Date().toISOString(),
-        email_subscribed: emailChecked,
-      })
-      .eq("user_id", userId);
+    try {
+      const res = await fetch("/api/accept-terms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ email_subscribed: emailChecked }),
+      });
 
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("ToS accept failed:", err);
+      }
+    } catch (e) {
+      console.error("ToS accept error:", e);
+    }
+
+    setSubmitting(false);
     onAccepted();
   }
 
@@ -54,8 +65,7 @@ export default function TermsConsent({ userId, onAccepted, onDeclined }: TermsCo
           understood our Terms of Service.
         </p>
 
-        {/* Checkbox 1 — mandatory */}
-        <label className="flex items-start gap-3 cursor-pointer group">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={tosChecked}
@@ -75,8 +85,7 @@ export default function TermsConsent({ userId, onAccepted, onDeclined }: TermsCo
           </span>
         </label>
 
-        {/* Checkbox 2 — optional */}
-        <label className="flex items-start gap-3 cursor-pointer group">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={emailChecked}
@@ -88,7 +97,6 @@ export default function TermsConsent({ userId, onAccepted, onDeclined }: TermsCo
           </span>
         </label>
 
-        {/* Buttons */}
         <div className="flex gap-3 pt-2">
           <button
             onClick={onDeclined}
