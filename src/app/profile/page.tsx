@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, usePatientProfile, useSubscription } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import LifespanBar from "@/components/LifespanBar";
-import SpiritChat from "@/components/SpiritChat";
+import SpiritChat, { type ChatMessage } from "@/components/SpiritChat";
 
 type Tab = "terminal" | "examination";
 
@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [editingName, setEditingName] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [nameSaved, setNameSaved] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/");
@@ -148,6 +149,8 @@ export default function ProfilePage() {
           freeMessagesUsed={(sub?.free_messages_used as number) ?? 0}
           freeMessagesLimit={(sub?.free_messages_limit as number) ?? 10}
           subscriptionStatus={(sub?.status as string) ?? "free"}
+          messages={chatMessages}
+          setMessages={setChatMessages}
         />
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4">

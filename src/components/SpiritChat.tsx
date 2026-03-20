@@ -10,15 +10,15 @@ const ALCH_GLYPHS = "\u263f\ud83d\udf0d\ud83d\udf14\ud83d\udf03\ud83d\udf02\ud83
 
 // ── Types ────────────────────────────────────────────────────────
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  commands?: AgentCommand[];
-}
-
 interface AgentCommand {
   type: string;
   [key: string]: unknown;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  commands?: AgentCommand[];
 }
 
 interface SpiritChatProps {
@@ -31,6 +31,8 @@ interface SpiritChatProps {
   freeMessagesUsed: number;
   freeMessagesLimit: number;
   subscriptionStatus: string;
+  messages: ChatMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
 
 // ── Scramble text ────────────────────────────────────────────────
@@ -93,8 +95,9 @@ export default function SpiritChat({
   freeMessagesUsed,
   freeMessagesLimit,
   subscriptionStatus,
+  messages,
+  setMessages,
 }: SpiritChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [subscribing, setSubscribing] = useState(false);

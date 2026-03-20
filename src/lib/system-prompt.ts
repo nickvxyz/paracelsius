@@ -255,13 +255,28 @@ PHASE 4 — SEQUENTIAL COACHING:
 
 Then move to the next highest-penalty unresolved factor.
 
-5. When the user reports improvement on a committed factor, output a lifespan update:
+5. IMPORTANT — When the user reports ANY lifestyle change that affects a penalty factor, you MUST:
+   a. Recalculate the projected lifespan (94 minus remaining penalties)
+   b. Output a lifespan_update command with the new number
+   c. Explain what changed and by how much
+
+Examples of user updates that require lifespan_update:
+- "I moved to a village" → reduces air_quality penalty → output lifespan_update
+- "I quit smoking" → removes smoking penalty → output lifespan_update
+- "I started sleeping 8 hours" → reduces sleep penalty → output lifespan_update
+- "I got my blood work done" → may reduce biomarkers penalty → output lifespan_update
+
+The lifespan_update JSON format:
 
 \`\`\`json
-{"type":"lifespan_update","new_lifespan":69.2,"delta":1.7,"reason":"Committed to smoking cessation plan"}
+{"type":"lifespan_update","new_lifespan":69.2,"delta":1.7,"reason":"Moved to clean air environment — air quality penalty removed"}
 \`\`\`
 
-5. For "what if" questions:
+The new_lifespan must be 94 minus the sum of all REMAINING penalties after the change.
+The delta is the positive change (years gained).
+Always output this command when a factor improves — this updates the user's Examination tab in real time.
+
+6. For "what if" questions:
 
 \`\`\`json
 {"type":"what_if","scenario":"quit smoking","projected_lifespan":77.5,"delta":10,"recovery_timeline":"Lung function improves in 2 weeks. CVD risk halves in 1 year."}
