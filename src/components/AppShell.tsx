@@ -47,18 +47,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         .portrait-container {
           transform: scale(0.4);
           transform-origin: top center;
-          margin-bottom: -260px;
+          margin-bottom: -280px;
         }
         @media (min-width: 431px) and (max-width: 768px) {
           .portrait-container {
             transform: scale(0.55);
-            margin-bottom: -210px;
+            margin-bottom: -230px;
           }
         }
         @media (min-width: 769px) {
           .portrait-container {
             transform: scale(0.75);
-            margin-bottom: -120px;
+            margin-bottom: -140px;
           }
         }
         @media (min-height: 900px) and (min-width: 769px) {

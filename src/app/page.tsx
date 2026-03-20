@@ -79,7 +79,7 @@ function HomeContent() {
         />
       </div>
 
-      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center">
+      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center mt-6">
         EXAMINE YOUR LIFESPAN NOW
       </h2>
 
