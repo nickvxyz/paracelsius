@@ -229,7 +229,7 @@ export default function SpiritChat({
   }
 
   const borderColor = "rgba(140,230,180,0.25)";
-  const inputBarH = 60; // form + counter
+  const inputBarH = 80; // form + bankr-style counter + subscribe row
 
   /*
    * Layout: the parent provides full height via flex.
@@ -244,9 +244,18 @@ export default function SpiritChat({
         style={{ paddingBottom: `${inputBarH + 12}px` }}
       >
         {messages.length === 0 && !isStreaming && (
-          <p className="text-center text-sm pt-4" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
-            {assessmentCompleted ? "Speak, and the physician shall answer." : "Say hello to begin your examination."}
-          </p>
+          <div className="text-center pt-4 space-y-2" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
+            <p className="text-sm">
+              {assessmentCompleted
+                ? "Speak, and the physician shall answer."
+                : "Start your longevity examination."}
+            </p>
+            {!assessmentCompleted && (
+              <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+                I will assess 17 lifestyle factors from Dr. Zolman&apos;s protocol and calculate your projected lifespan.
+              </p>
+            )}
+          </div>
         )}
 
         <div className="space-y-4 max-w-[800px] mx-auto">
@@ -259,8 +268,16 @@ export default function SpiritChat({
                   </span>
                 </div>
               ) : (
-                <div aria-live="polite">
-                  <SpiritMessage content={renderContent(msg.content)} isNew={i === messages.length - 1 && !isStreaming} />
+                <div className="flex gap-2 items-start" aria-live="polite">
+                  <img
+                    src="/paracelsus-portrait.png"
+                    alt="Paracelsus"
+                    className="w-7 h-7 rounded-sm shrink-0 mt-0.5 object-cover"
+                    style={{ border: "1px solid rgba(140,230,180,0.2)" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <SpiritMessage content={renderContent(msg.content)} isNew={i === messages.length - 1 && !isStreaming} />
+                  </div>
                 </div>
               )}
 
@@ -333,10 +350,7 @@ export default function SpiritChat({
           transition: kbOffset > 0 ? "none" : "bottom 0.15s ease-out",
         }}
       >
-        <div
-          className="max-w-[800px] mx-auto bg-background"
-          style={{ border: `1px solid ${borderColor}`, borderBottom: kbOffset > 0 ? `1px solid ${borderColor}` : "none" }}
-        >
+        <div className="max-w-[800px] mx-auto bg-background" style={{ border: `1px solid ${borderColor}` }}>
           <form onSubmit={handleSubmit} className="flex">
             <input
               ref={inputRef}
@@ -357,12 +371,36 @@ export default function SpiritChat({
               Send
             </button>
           </form>
-          {remaining !== null && !dailyLimitHit && remaining > 0 && (
-            <p className="text-center text-[10px] text-muted py-1" style={{ borderTop: `1px solid ${borderColor}` }}>
-              {remaining} free message{remaining !== 1 ? "s" : ""} remaining
-            </p>
-          )}
         </div>
+        {/* Bankr-style free messages counter */}
+        {remaining !== null && !dailyLimitHit && (
+          <div className="max-w-[800px] mx-auto px-3 pt-1.5 pb-1">
+            <div className="flex items-center gap-2 text-[10px] text-muted">
+              <span className="shrink-0">{freeMessagesUsed} / {freeMessagesLimit} free daily messages used</span>
+              <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-accent/60 transition-all"
+                  style={{ width: `${(freeMessagesUsed / freeMessagesLimit) * 100}%` }}
+                />
+              </div>
+              <span className="shrink-0" style={{ color: "rgba(140,230,180,0.6)" }}>
+                {Math.round((freeMessagesUsed / freeMessagesLimit) * 100)}%
+              </span>
+            </div>
+            {!isPaid && freeMessagesUsed > 0 && (
+              <div className="flex items-center justify-between mt-0.5">
+                <span className="text-[10px] text-muted">Unlimited access</span>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={subscribing}
+                  className="text-[10px] font-heading uppercase tracking-wider bg-accent/90 text-background px-2 py-0.5 hover:opacity-90 disabled:opacity-50"
+                >
+                  Subscribe
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

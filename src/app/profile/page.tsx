@@ -73,8 +73,8 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
       {/* ── Compact user header ── */}
-      <div className="shrink-0 px-4 py-2 flex items-center justify-between">
-        <div className="min-w-0">
+      <div className="shrink-0 px-4 py-2">
+        <div className="flex items-center gap-2 min-w-0">
           {editingName ? (
             <input
               type="text"
@@ -87,18 +87,18 @@ export default function ProfilePage() {
               }}
               autoFocus
               maxLength={50}
-              className="bg-surface-light px-2 py-0.5 text-sm text-foreground focus:outline-none border border-accent/20"
+              className="bg-surface-light px-2 py-0.5 text-sm text-foreground focus:outline-none border border-accent/20 flex-1"
             />
           ) : (
             <button
               onClick={() => { setDisplayName(displayName || nameToShow); setEditingName(true); }}
-              className={`text-sm transition-colors truncate block ${nameSaved ? "text-green-400" : "text-foreground hover:text-accent"}`}
+              className={`text-sm transition-colors truncate flex items-center gap-1.5 ${nameSaved ? "text-green-400" : "text-foreground hover:text-accent"}`}
               title="Click to edit name"
             >
               {nameSaved ? "\u2713 Saved" : nameToShow}
+              {!nameSaved && <span className="text-muted text-[10px] shrink-0">&#x270E;</span>}
             </button>
           )}
-          <p className="text-muted text-[10px] truncate">{user.email}</p>
         </div>
       </div>
 
