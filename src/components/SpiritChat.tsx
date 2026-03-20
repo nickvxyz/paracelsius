@@ -450,6 +450,11 @@ export default function SpiritChat({
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onFocus={() => {
+            setTimeout(() => {
+              inputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }, 300);
+          }}
           placeholder="Speak to the physician..."
           disabled={isStreaming || dailyLimitHit}
           aria-label="Message Paracelsus"

@@ -14,7 +14,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
-      <div className="flex flex-col h-[100dvh] overflow-hidden">
+      <div className="flex flex-col h-[100dvh]">
         {/* Nav — fixed height */}
         <Nav user={user} onSignOut={signOut} />
 
