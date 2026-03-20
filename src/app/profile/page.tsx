@@ -220,7 +220,7 @@ export default function ProfilePage() {
                       })}
                     </div>
                     <p className="text-[10px] text-muted pt-1">
-                      {committedFactors.length} of {penaltyEntries.length} factors addressed
+                      {committedFactors.length} of {penaltyEntries.length + committedFactors.filter(f => !penaltyEntries.some(([k]) => k === f)).length} factors addressed
                     </p>
                   </div>
                 )}
