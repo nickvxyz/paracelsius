@@ -56,7 +56,7 @@ function HomeContent() {
   if (user) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4">
+    <div className="flex flex-col items-center flex-1 gap-3 px-4 overflow-y-auto py-4">
       {authError && (
         <p
           className="text-sm text-center leading-6"
@@ -69,7 +69,7 @@ function HomeContent() {
         </p>
       )}
 
-      <div className="max-h-[40vh] overflow-hidden">
+      <div className="shrink-0">
         <EtherText
           lines={INTRO_LINES}
           charSpeed={15}
@@ -79,7 +79,7 @@ function HomeContent() {
         />
       </div>
 
-      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center mt-6">
+      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center mt-6 shrink-0">
         EXAMINE YOUR LIFESPAN NOW
       </h2>
 
@@ -91,7 +91,7 @@ function HomeContent() {
 
       <button
         onClick={() => setAuthOpen(true)}
-        className="bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+        className="shrink-0 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
       >
         Sign In
       </button>
