@@ -362,7 +362,7 @@ export default function SpiritChat({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Speak to the physician..."
+              placeholder="Speak to Paracelsus..."
               disabled={isStreaming || dailyLimitHit}
               aria-label="Message Paracelsus"
               className="flex-1 min-w-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
