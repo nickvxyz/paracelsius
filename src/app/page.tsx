@@ -80,7 +80,7 @@ function HomeContent() {
       </div>
 
       <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center">
-        READY TO EXAMINE YOUR LIFESPAN?
+        EXAMINE YOUR LIFESPAN NOW
       </h2>
 
       {patientCount !== null && patientCount > 0 && (
