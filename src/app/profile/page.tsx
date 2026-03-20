@@ -83,7 +83,7 @@ export default function ProfilePage() {
   const penaltyEntries = Object.entries(penaltiesNormalized)
     .filter(([, v]) => typeof v === "number" && v > 0)
     .sort(([, a], [, b]) => b - a);
-  const nameToShow = displayName || (user.email?.split("@")[0] ?? "Patient");
+  const nameToShow = displayName || (user.email?.split("@")[0] ?? "Individual");
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">

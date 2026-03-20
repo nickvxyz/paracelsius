@@ -83,18 +83,24 @@ function HomeContent() {
         EXAMINE YOUR LIFESPAN NOW
       </h2>
 
-      {patientCount !== null && patientCount > 0 && (
-        <p className="text-muted text-xs">
-          {patientCount.toLocaleString()} patients examined
-        </p>
-      )}
-
       <button
         onClick={() => setAuthOpen(true)}
         className="shrink-0 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
       >
         Sign In
       </button>
+
+      {patientCount !== null && patientCount > 0 && (
+        <p
+          className="text-xs mt-4 shrink-0"
+          style={{
+            color: "rgba(140,230,180,0.7)",
+            textShadow: "0 0 6px rgba(140,230,180,0.15)",
+          }}
+        >
+          {patientCount.toLocaleString()} {patientCount === 1 ? "individual" : "individuals"} examined
+        </p>
+      )}
 
       <AuthOverlay open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
