@@ -22,19 +22,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Nav */}
         <Nav user={user} onSignOut={signOut} />
 
-        {/* Main */}
-        <main className="relative z-10 flex flex-col items-center flex-1 min-h-0">
-          {/* CRT Portrait — hidden on mobile profile, shown elsewhere */}
+        {/* Main — scrollable for all pages except profile (which has its own chat scroll) */}
+        <main className={`relative z-10 flex flex-col items-center flex-1 min-h-0 ${isProfile ? "overflow-hidden" : "overflow-y-auto"}`}>
+          {/* CRT Portrait — hidden on mobile profile */}
           <div className={`shrink-0 portrait-container ${isProfile ? "hidden sm:block" : ""}`}>
             <CRTPortrait ref={portraitRef} />
           </div>
           {/* Page content */}
-          <div className="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
+          <div className={`w-full flex flex-col items-center ${isProfile ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
             {children}
           </div>
         </main>
 
-        {/* Footer — hidden on mobile profile */}
+        {/* Footer — hidden on profile */}
         <footer className={`relative z-10 shrink-0 border-t border-white/5 py-2 px-4 ${isProfile ? "hidden" : ""}`}>
           <div className="max-w-2xl mx-auto flex items-center justify-between text-[10px] text-muted">
             <span>&copy; {new Date().getFullYear()} Paracelsus</span>
@@ -53,24 +53,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         .portrait-container {
           transform: scale(0.4);
           transform-origin: top center;
-          margin-bottom: -280px;
+          margin-bottom: -300px;
         }
         @media (min-width: 431px) and (max-width: 768px) {
           .portrait-container {
             transform: scale(0.55);
-            margin-bottom: -230px;
+            margin-bottom: -240px;
           }
         }
         @media (min-width: 769px) {
           .portrait-container {
             transform: scale(0.75);
-            margin-bottom: -140px;
+            margin-bottom: -150px;
           }
         }
         @media (min-height: 900px) and (min-width: 769px) {
           .portrait-container {
             transform: scale(1);
-            margin-bottom: -40px;
+            margin-bottom: -50px;
           }
         }
       `}</style>
