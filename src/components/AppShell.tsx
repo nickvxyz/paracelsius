@@ -24,12 +24,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Main — scrollable for all pages except profile (which has its own chat scroll) */}
         <main className={`relative z-10 flex flex-col items-center flex-1 min-h-0 overflow-x-hidden ${isProfile ? "overflow-y-hidden" : "overflow-y-auto"}`}>
-          {/* CRT Portrait — hidden on mobile profile */}
-          <div className={`shrink-0 portrait-container ${isProfile ? "hidden sm:block" : ""}`}>
-            <CRTPortrait ref={portraitRef} />
-          </div>
-          {/* Page content */}
           <div className={`w-full max-w-[100vw] overflow-x-hidden flex flex-col items-center ${isProfile ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
+            {/* CRT Portrait — scrolls with content, hidden on mobile profile */}
+            <div className={`shrink-0 portrait-container ${isProfile ? "hidden sm:block" : ""}`}>
+              <CRTPortrait ref={portraitRef} />
+            </div>
             {children}
           </div>
         </main>
