@@ -84,7 +84,7 @@ export default function ProfilePage() {
   const nameToShow = displayName || (user.email?.split("@")[0] ?? "Patient");
 
   return (
-    <div className="flex flex-1 min-h-0 justify-center py-3 overflow-hidden">
+    <div className="flex flex-1 min-h-0 justify-center py-3">
       <div className="w-full max-w-2xl flex flex-col gap-3 px-4 sm:px-6 min-h-0">
         {/* ① Patient File */}
         <div className="space-y-1">

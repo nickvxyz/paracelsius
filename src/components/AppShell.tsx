@@ -14,18 +14,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
-      <div className="flex flex-col h-[100dvh]">
+      <div className="flex flex-col h-[100dvh] overflow-x-hidden overflow-y-auto">
         {/* Nav — fixed height */}
         <Nav user={user} onSignOut={signOut} />
 
         {/* Main — fills remaining space */}
-        <main className="relative z-10 flex flex-col items-center flex-1 min-h-0 overflow-hidden">
+        <main className="relative z-10 flex flex-col items-center flex-1 min-h-0">
           {/* CRT Portrait — compact */}
           <div className="shrink-0 portrait-container">
             <CRTPortrait ref={portraitRef} />
           </div>
           {/* Page content — fills remaining space */}
-          <div className="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
+          <div className="flex-1 min-h-0 w-full flex flex-col items-center">
             {children}
           </div>
         </main>

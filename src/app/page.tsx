@@ -56,7 +56,7 @@ function HomeContent() {
   if (user) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4 overflow-hidden">
+    <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4">
       {authError && (
         <p
           className="text-sm text-center leading-6"
