@@ -31,17 +31,15 @@ function HomeContent() {
       .catch(() => {});
   }, []);
 
-  // Redirect authenticated users to profile
   useEffect(() => {
     if (!authLoading && user) {
       router.replace("/profile");
     }
   }, [authLoading, user, router]);
 
-  // Loading
   if (authLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-200px)] items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p
           className="text-sm"
           style={{
@@ -55,15 +53,13 @@ function HomeContent() {
     );
   }
 
-  // Authenticated — redirect in progress
   if (user) return null;
 
-  // Landing page
   return (
-    <div className="flex flex-col items-center gap-4 px-4 pb-12 max-w-full overflow-hidden">
+    <div className="flex flex-col items-center justify-center flex-1 gap-3 px-4 overflow-hidden">
       {authError && (
         <p
-          className="text-sm text-center leading-6 mb-2"
+          className="text-sm text-center leading-6"
           style={{
             color: "rgba(140,230,180,0.9)",
             textShadow: "0 0 8px rgba(140,230,180,0.3)",
@@ -73,15 +69,17 @@ function HomeContent() {
         </p>
       )}
 
-      <EtherText
-        lines={INTRO_LINES}
-        charSpeed={20}
-        lineDelay={2500}
-        scramblePasses={2}
-        onLineStart={() => {}}
-      />
+      <div className="max-h-[40vh] overflow-hidden">
+        <EtherText
+          lines={INTRO_LINES}
+          charSpeed={20}
+          lineDelay={2500}
+          scramblePasses={2}
+          onLineStart={() => {}}
+        />
+      </div>
 
-      <h2 className="font-heading text-lg sm:text-xl font-bold tracking-wider text-accent text-center mt-4">
+      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center">
         READY TO EXAMINE YOUR LIFESPAN?
       </h2>
 
@@ -93,7 +91,7 @@ function HomeContent() {
 
       <button
         onClick={() => setAuthOpen(true)}
-        className="mt-2 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+        className="bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
       >
         Sign In
       </button>
@@ -107,7 +105,7 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[calc(100vh-200px)] items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <p
             className="text-sm"
             style={{

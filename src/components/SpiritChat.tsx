@@ -304,11 +304,9 @@ export default function SpiritChat({
   return (
     <>
     <div
-      className="relative w-full max-w-[800px] mx-auto flex flex-col overflow-hidden"
+      className="relative w-full max-w-[800px] mx-auto flex flex-col overflow-hidden flex-1 min-h-0"
       style={{
         border: `1px solid ${borderColor}`,
-        maxHeight: "60vh",
-        minHeight: "300px",
       }}
     >
       {/* ── Top: Message history ── */}

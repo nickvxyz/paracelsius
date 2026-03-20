@@ -84,8 +84,8 @@ export default function ProfilePage() {
   const nameToShow = displayName || (user.email?.split("@")[0] ?? "Patient");
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] justify-center py-6">
-      <div className="w-full max-w-2xl space-y-5 px-4 sm:px-6">
+    <div className="flex flex-1 min-h-0 justify-center py-3 overflow-hidden">
+      <div className="w-full max-w-2xl flex flex-col gap-3 px-4 sm:px-6 min-h-0">
         {/* ① Patient File */}
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
@@ -229,8 +229,8 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ④ Chat — full width on mobile, contained on desktop */}
-        <div className="-mx-2 sm:mx-0">
+        {/* ④ Chat — fills remaining space */}
+        <div className="-mx-2 sm:mx-0 flex-1 min-h-0 flex flex-col">
         <SpiritChat
           accessToken={session.access_token}
           assessmentCompleted={assessmentCompleted}

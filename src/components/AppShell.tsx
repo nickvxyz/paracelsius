@@ -14,39 +14,54 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
-      <Nav user={user} onSignOut={signOut} />
-      <main className="relative z-10 flex flex-col items-center max-w-full overflow-x-hidden">
-        {/* CRT Portrait — brand anchor, visible on ALL pages */}
-        <div className="pt-2 portrait-container">
-          <CRTPortrait ref={portraitRef} />
-        </div>
-        {children}
-      </main>
+      <div className="flex flex-col h-[100dvh] overflow-hidden">
+        {/* Nav — fixed height */}
+        <Nav user={user} onSignOut={signOut} />
 
-      <footer className="relative z-10 border-t border-white/5 mt-16 py-6 px-6">
-        <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
-          <span>&copy; {new Date().getFullYear()} Paracelsus</span>
-          <div className="flex gap-4">
-            <a href="/about" className="hover:text-accent transition-colors">About</a>
-            <span className="opacity-30">|</span>
-            <a href="/disclaimer" className="hover:text-accent transition-colors">Not medical advice</a>
+        {/* Main — fills remaining space */}
+        <main className="relative z-10 flex flex-col items-center flex-1 min-h-0 overflow-hidden">
+          {/* CRT Portrait — compact */}
+          <div className="shrink-0 portrait-container">
+            <CRTPortrait ref={portraitRef} />
           </div>
-        </div>
-      </footer>
+          {/* Page content — fills remaining space */}
+          <div className="flex-1 min-h-0 w-full flex flex-col items-center overflow-hidden">
+            {children}
+          </div>
+        </main>
+
+        {/* Footer — compact, always at bottom */}
+        <footer className="relative z-10 shrink-0 border-t border-white/5 py-2 px-4">
+          <div className="max-w-2xl mx-auto flex items-center justify-between text-[10px] text-muted">
+            <span>&copy; {new Date().getFullYear()} Paracelsus</span>
+            <div className="flex gap-3">
+              <a href="/about" className="hover:text-accent transition-colors">About</a>
+              <span className="opacity-30">|</span>
+              <a href="/disclaimer" className="hover:text-accent transition-colors">Disclaimer</a>
+            </div>
+          </div>
+        </footer>
+      </div>
 
       <style jsx>{`
         .portrait-container {
-          transform: scale(0.55);
+          transform: scale(0.4);
           transform-origin: top center;
-          margin-bottom: -220px;
+          margin-bottom: -260px;
         }
         @media (min-width: 431px) and (max-width: 768px) {
           .portrait-container {
-            transform: scale(0.7);
-            margin-bottom: -150px;
+            transform: scale(0.55);
+            margin-bottom: -210px;
           }
         }
         @media (min-width: 769px) {
+          .portrait-container {
+            transform: scale(0.75);
+            margin-bottom: -120px;
+          }
+        }
+        @media (min-height: 900px) and (min-width: 769px) {
           .portrait-container {
             transform: scale(1);
             margin-bottom: -40px;
