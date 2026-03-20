@@ -33,6 +33,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), monospace;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS auto-zoom on input focus — inputs must be >= 16px */
+input, textarea, select {
+  font-size: 16px !important;
 }
 
 /* Auth overlay fade-in */

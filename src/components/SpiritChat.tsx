@@ -349,14 +349,14 @@ export default function SpiritChat({
 
       {/* ── Fixed input bar — moves above keyboard ── */}
       <div
-        className="fixed left-0 right-0 z-50"
+        className="fixed left-0 right-0 z-50 px-2 sm:px-0"
         style={{
           bottom: `${kbOffset}px`,
           transition: kbOffset > 0 ? "none" : "bottom 0.15s ease-out",
         }}
       >
-        <div className="max-w-[800px] mx-auto bg-background" style={{ border: `1px solid ${borderColor}` }}>
-          <form onSubmit={handleSubmit} className="flex">
+        <div className="max-w-[800px] mx-auto bg-background border-t border-white/10">
+          <form onSubmit={handleSubmit} className="flex items-center">
             <input
               ref={inputRef}
               type="text"
@@ -365,45 +365,32 @@ export default function SpiritChat({
               placeholder="Speak to Paracelsus..."
               disabled={isStreaming || dailyLimitHit}
               aria-label="Message Paracelsus"
-              className="flex-1 min-w-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+              className="flex-1 min-w-0 bg-transparent px-3 py-3 text-base text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={isStreaming || dailyLimitHit || !input.trim()}
-              className="shrink-0 w-[72px] sm:w-[100px] bg-accent py-3 text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-40"
-              style={{ borderLeft: `1px solid ${borderColor}` }}
+              className="shrink-0 px-4 py-3 text-xs font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
             >
               Send
             </button>
           </form>
         </div>
-        {/* Bankr-style free messages counter */}
+        {/* Free messages counter */}
         {remaining !== null && !dailyLimitHit && (
-          <div className="max-w-[800px] mx-auto px-3 pt-1.5 pb-1">
+          <div className="max-w-[800px] mx-auto px-3 py-1 bg-background">
             <div className="flex items-center gap-2 text-[10px] text-muted">
-              <span className="shrink-0">{localUsed} / {freeMessagesLimit} free daily messages used</span>
-              <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+              <span className="shrink-0">{localUsed}/{freeMessagesLimit} used</span>
+              <div className="flex-1 h-[2px] bg-white/5 overflow-hidden">
                 <div
-                  className="h-full bg-accent/60 transition-all"
+                  className="h-full bg-accent/50 transition-all"
                   style={{ width: `${(localUsed / freeMessagesLimit) * 100}%` }}
                 />
               </div>
-              <span className="shrink-0" style={{ color: "rgba(140,230,180,0.6)" }}>
+              <span className="shrink-0 text-muted">
                 {Math.round((localUsed / freeMessagesLimit) * 100)}%
               </span>
             </div>
-            {!isPaid && localUsed > 0 && (
-              <div className="flex items-center justify-between mt-0.5">
-                <span className="text-[10px] text-muted">Unlimited access</span>
-                <button
-                  onClick={handleSubscribe}
-                  disabled={subscribing}
-                  className="text-[10px] font-heading uppercase tracking-wider bg-accent/90 text-background px-2 py-0.5 hover:opacity-90 disabled:opacity-50"
-                >
-                  Subscribe
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>

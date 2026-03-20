@@ -162,7 +162,8 @@ export async function POST(req: NextRequest) {
       sub.free_messages_used = 0;
     }
 
-    if (sub.free_messages_used >= FREE_DAILY_LIMIT) {
+    const messageLimit = sub.free_messages_limit || FREE_DAILY_LIMIT;
+    if (sub.free_messages_used >= messageLimit) {
       return Response.json(
         {
           error: "daily_limit",
