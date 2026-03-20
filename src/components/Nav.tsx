@@ -24,7 +24,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
     <>
       <nav className="relative z-20 flex items-center justify-between px-4 sm:px-6 py-4 max-w-full">
         <Link
-          href="/"
+          href={user ? "/profile" : "/"}
           className="font-heading text-sm font-bold tracking-[1.2px] text-accent shrink-0"
         >
           PARACELSUS
