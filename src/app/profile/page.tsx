@@ -211,7 +211,12 @@ export default function ProfilePage() {
             ) : (
               /* Empty state */
               <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                <div className="text-accent text-3xl">&#x2697;</div>
+                <img
+                  src="/paracelsus-portrait.png"
+                  alt="Paracelsus"
+                  className="w-16 h-16 rounded-sm object-cover opacity-60"
+                  style={{ border: "1px solid rgba(140,230,180,0.2)" }}
+                />
                 <p className="text-muted text-sm text-center leading-6 max-w-xs">
                   Complete your examination in Terminal to see your projected lifespan and personalized protocol.
                 </p>
