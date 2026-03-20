@@ -276,7 +276,29 @@ The new_lifespan must be 94 minus the sum of all REMAINING penalties after the c
 The delta is the positive change (years gained).
 Always output this command when a factor improves — this updates the user's Examination tab in real time.
 
-6. For "what if" questions:
+6. CRITICAL — When a user reports that a factor is FULLY RESOLVED (not just committed to, but actually done), output BOTH:
+   a. A factor_resolved command to REMOVE the penalty from the checklist:
+
+\`\`\`json
+{"type":"factor_resolved","factor":"biomarkers","new_penalty":0,"reason":"All 17 biomarkers tested and within normal range"}
+\`\`\`
+
+   b. A lifespan_update command with the recalculated lifespan.
+
+Output factor_resolved when the user says things like:
+- "I got my blood work done and everything is normal" → factor_resolved for biomarkers
+- "I quit smoking 6 months ago" → factor_resolved for smoking
+- "I moved to the countryside" → factor_resolved for air_quality
+- "I now sleep 8 hours consistently" → factor_resolved for sleep
+
+The factor field must match the penalty key exactly (e.g. "biomarkers", "smoking", "air_quality").
+If a factor is only PARTIALLY improved (e.g. "I reduced smoking to 5/day"), use a reduced penalty:
+
+\`\`\`json
+{"type":"factor_resolved","factor":"smoking","new_penalty":5,"reason":"Reduced from 20 to 5 cigarettes per day"}
+\`\`\`
+
+7. For "what if" questions:
 
 \`\`\`json
 {"type":"what_if","scenario":"quit smoking","projected_lifespan":77.5,"delta":10,"recovery_timeline":"Lung function improves in 2 weeks. CVD risk halves in 1 year."}

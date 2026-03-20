@@ -383,6 +383,60 @@ async function handleAgentCommand(supabase: any, userId: string, command: any) {
         .eq("user_id", userId);
       break;
     }
+    case "factor_resolved": {
+      // Update or remove a penalty when user reports a factor is resolved
+      const { data: resolvedProfile } = await supabase
+        .from("patient_profiles")
+        .select("penalties, penalty_advice, conversation_state")
+        .eq("user_id", userId)
+        .single();
+
+      const currentPenalties = resolvedProfile?.penalties || {};
+      const currentAdvice = resolvedProfile?.penalty_advice || {};
+      const convState = resolvedProfile?.conversation_state || {};
+
+      // Normalize penalties if array (legacy)
+      let penaltiesObj: Record<string, number> = {};
+      let adviceObj: Record<string, string> = {};
+      if (Array.isArray(currentPenalties)) {
+        for (const p of currentPenalties as Array<{ factor?: string; years_lost?: number; details?: string }>) {
+          const key = (p.factor || "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+          penaltiesObj[key] = p.years_lost ?? 0;
+          if (p.details) adviceObj[key] = p.details;
+        }
+      } else {
+        penaltiesObj = { ...currentPenalties };
+        adviceObj = { ...currentAdvice };
+      }
+
+      const factor = command.factor;
+      const newPenalty = command.new_penalty ?? 0;
+
+      if (newPenalty <= 0) {
+        // Fully resolved — remove from penalties and advice
+        delete penaltiesObj[factor];
+        delete adviceObj[factor];
+      } else {
+        // Partially resolved — update the penalty value
+        penaltiesObj[factor] = newPenalty;
+        if (command.reason) adviceObj[factor] = command.reason;
+      }
+
+      // Mark as committed in conversation state
+      const committed = Array.isArray(convState.committed_factors) ? convState.committed_factors : [];
+      if (!committed.includes(factor)) committed.push(factor);
+
+      await supabase
+        .from("patient_profiles")
+        .update({
+          penalties: penaltiesObj,
+          penalty_advice: adviceObj,
+          conversation_state: { ...convState, committed_factors: committed },
+          last_interaction_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      break;
+    }
     case "daily_receipt":
     case "what_if":
       break;
