@@ -1,20 +1,18 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createServiceClient } from "@/lib/supabase";
 import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const FREE_DAILY_LIMIT = 10;
 
 function getTodayKey(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-// ── LLM streaming ───────────────────────────────────────────────
-
 function streamLLMResponse(
   systemPrompt: string,
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
+  conversationHistory: Array<{ role: string; parts: Array<{ text: string }> }>,
   message: string,
   onComplete?: (fullResponse: string) => Promise<void>
 ) {
@@ -25,30 +23,24 @@ function streamLLMResponse(
       let fullResponse = "";
 
       try {
-        const messages: Array<{ role: "user" | "assistant"; content: string }> =
-          conversationHistory.length > 0
-            ? conversationHistory
-            : [{ role: "user" as const, content: message }];
-
-        const stream = anthropic.messages.stream({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4096,
-          system: systemPrompt,
-          messages,
+        const model = genAI.getGenerativeModel({
+          model: "gemini-2.5-flash",
+          systemInstruction: systemPrompt,
         });
 
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            const text = event.delta.text;
-            if (text) {
-              fullResponse += text;
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-              );
-            }
+        const result = await model.generateContentStream({
+          contents: conversationHistory.length > 0
+            ? conversationHistory
+            : [{ role: "user", parts: [{ text: message }] }],
+        });
+
+        for await (const chunk of result.stream) {
+          const text = chunk.text();
+          if (text) {
+            fullResponse += text;
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+            );
           }
         }
 
@@ -93,8 +85,6 @@ function streamLLMResponse(
   });
 }
 
-// ── Main handler ─────────────────────────────────────────────────
-
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient();
 
@@ -118,7 +108,6 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Message required" }, { status: 400 });
   }
 
-  // ── Bootstrap rows for new users ──
   const { data: existingProfile } = await supabase
     .from("patient_profiles")
     .select("user_id")
@@ -212,10 +201,10 @@ export async function POST(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(15);
 
-  const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> =
+  const conversationHistory =
     recentMessages?.reverse().map((m) => ({
-      role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
-      content: m.content,
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.content }],
     })) || [];
 
   const isAssessment = !patientProfile?.assessment_completed;
@@ -234,7 +223,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         role: "assistant",
         content: fullResponse,
-        metadata: { model: "claude-sonnet-4" },
+        metadata: { model: "gemini-2.5-flash" },
       });
 
       const jsonMatches = fullResponse.match(
