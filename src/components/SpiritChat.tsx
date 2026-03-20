@@ -67,8 +67,7 @@ function ScrambleText({ text, onComplete }: { text: string; onComplete?: () => v
 
 // ── Spirit message ───────────────────────────────────────────────
 
-function SpiritMessage({ content, isNew }: { content: string; isNew: boolean }) {
-  const [showScramble, setShowScramble] = useState(isNew);
+function SpiritMessage({ content }: { content: string; isNew: boolean }) {
   if (!content) return null;
   return (
     <div
@@ -78,7 +77,7 @@ function SpiritMessage({ content, isNew }: { content: string; isNew: boolean }) 
         textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
       }}
     >
-      {showScramble ? <ScrambleText text={content} onComplete={() => setShowScramble(false)} /> : content}
+      {content}
     </div>
   );
 }
