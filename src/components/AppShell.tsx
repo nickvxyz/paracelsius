@@ -35,7 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </main>
 
         {/* Footer — hidden on mobile profile */}
-        <footer className={`relative z-10 shrink-0 border-t border-white/5 py-2 px-4 ${isProfile ? "hidden sm:block" : ""}`}>
+        <footer className={`relative z-10 shrink-0 border-t border-white/5 py-2 px-4 ${isProfile ? "hidden" : ""}`}>
           <div className="max-w-2xl mx-auto flex items-center justify-between text-[10px] text-muted">
             <span>&copy; {new Date().getFullYear()} Paracelsus</span>
             <div className="flex gap-3">

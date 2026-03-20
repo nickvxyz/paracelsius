@@ -72,7 +72,7 @@ function HomeContent() {
       <div className="max-h-[40vh] overflow-hidden">
         <EtherText
           lines={INTRO_LINES}
-          charSpeed={20}
+          charSpeed={15}
           lineDelay={2500}
           scramblePasses={2}
           onLineStart={() => {}}

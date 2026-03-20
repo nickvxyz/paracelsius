@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [lifespanYears, setLifespanYears] = useState<number | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [nameSaved, setNameSaved] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/");
@@ -43,6 +44,8 @@ export default function ProfilePage() {
     setEditingName(false);
     setDisplayName(trimmed);
     await supabase.from("patient_profiles").update({ display_name: trimmed }).eq("user_id", user.id);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 1500);
   };
 
   if (authLoading || profileLoading || subLoading) {
@@ -89,10 +92,10 @@ export default function ProfilePage() {
           ) : (
             <button
               onClick={() => { setDisplayName(displayName || nameToShow); setEditingName(true); }}
-              className="text-sm text-foreground hover:text-accent transition-colors truncate block"
+              className={`text-sm transition-colors truncate block ${nameSaved ? "text-green-400" : "text-foreground hover:text-accent"}`}
               title="Click to edit name"
             >
-              {nameToShow}
+              {nameSaved ? "\u2713 Saved" : nameToShow}
             </button>
           )}
           <p className="text-muted text-[10px] truncate">{user.email}</p>
@@ -103,7 +106,7 @@ export default function ProfilePage() {
       <div className="shrink-0 flex border-b border-white/10">
         <button
           onClick={() => setActiveTab("terminal")}
-          className={`flex-1 py-2.5 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
+          className={`flex-1 py-3 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
             activeTab === "terminal" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"
           }`}
         >
@@ -111,7 +114,7 @@ export default function ProfilePage() {
         </button>
         <button
           onClick={() => setActiveTab("examination")}
-          className={`flex-1 py-2.5 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
+          className={`flex-1 py-3 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
             activeTab === "examination" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"
           }`}
         >
@@ -137,33 +140,33 @@ export default function ProfilePage() {
           <div className="max-w-[800px] mx-auto space-y-5">
             {assessmentCompleted ? (
               <>
-                {/* Projected lifespan — large number */}
-                <div className="text-center space-y-2">
-                  <p className="text-muted text-[10px] font-heading uppercase tracking-widest">Projected Lifespan</p>
-                  <p
-                    className="font-heading font-black text-5xl sm:text-6xl"
-                    style={{ color: "rgba(140,230,180,0.9)", textShadow: "0 0 20px rgba(140,230,180,0.3)" }}
-                  >
-                    {currentLifespan.toFixed(1)}
-                  </p>
-                  <p className="text-muted text-xs">years</p>
-                </div>
-
-                {/* LifespanBar */}
-                <LifespanBar years={currentLifespan} animate={true} />
-
-                {baselineYears && (
-                  <div className="flex justify-center gap-6 text-xs text-muted">
-                    <span>Initial: <span className="text-foreground">{baselineYears} yrs</span></span>
-                    <span>Current: <span className="text-foreground">{currentLifespan.toFixed(1)} yrs</span></span>
-                    <span>
-                      Change:{" "}
-                      <span className={currentLifespan - baselineYears >= 0 ? "text-green-400" : "text-red-400"}>
-                        {currentLifespan - baselineYears >= 0 ? "+" : ""}{(currentLifespan - baselineYears).toFixed(1)} yrs
-                      </span>
-                    </span>
+                {/* Projected lifespan — contained card */}
+                <div className="border p-4 sm:p-6 space-y-3" style={{ borderColor: "rgba(140,230,180,0.25)" }}>
+                  <div className="text-center space-y-2">
+                    <p className="text-muted text-[10px] font-heading uppercase tracking-widest">Projected Lifespan</p>
+                    <p
+                      className="font-heading font-black text-5xl sm:text-6xl"
+                      style={{ color: "rgba(140,230,180,0.9)", textShadow: "0 0 20px rgba(140,230,180,0.3)" }}
+                    >
+                      {currentLifespan.toFixed(1)}
+                    </p>
+                    <p className="text-muted text-xs">years</p>
                   </div>
-                )}
+
+                  <LifespanBar years={currentLifespan} animate={true} />
+
+                  {baselineYears && (
+                    <div className="flex justify-center gap-4 sm:gap-6 text-[11px] text-muted pt-1">
+                      <span>Initial: <span className="text-foreground">{baselineYears}</span></span>
+                      <span>Current: <span className="text-foreground">{currentLifespan.toFixed(1)}</span></span>
+                      <span>
+                        <span className={currentLifespan - baselineYears >= 0 ? "text-green-400" : "text-red-400"}>
+                          {currentLifespan - baselineYears >= 0 ? "+" : ""}{(currentLifespan - baselineYears).toFixed(1)}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Zolman Level 1 checklist */}
                 {penaltyEntries.length > 0 && (
@@ -178,7 +181,7 @@ export default function ProfilePage() {
                         return (
                           <div
                             key={key}
-                            className={`py-2 px-3 ${isCommitted ? "border-l-2 border-green-400/50 bg-green-400/5" : "border-l-2 border-red-400/30"}`}
+                            className={`py-3 px-3 ${isCommitted ? "border-l-2 border-green-400/50 bg-green-400/5" : "border-l-2 border-red-400/30"}`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -190,7 +193,7 @@ export default function ProfilePage() {
                               <div className="flex items-center gap-2">
                                 <span className="text-sm text-red-400">-{(value as number).toFixed(1)}</span>
                                 {isCommitted && (
-                                  <span className="text-[9px] font-heading uppercase tracking-widest text-green-400/70">Done</span>
+                                  <span className="text-[10px] font-heading uppercase tracking-widest text-green-400">&#x2713;</span>
                                 )}
                               </div>
                             </div>

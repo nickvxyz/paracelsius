@@ -229,7 +229,7 @@ export default function SpiritChat({
   }
 
   const borderColor = "rgba(140,230,180,0.25)";
-  const inputBarH = 48;
+  const inputBarH = 60; // form + counter
 
   /*
    * Layout: the parent provides full height via flex.
@@ -244,7 +244,7 @@ export default function SpiritChat({
         style={{ paddingBottom: `${inputBarH + 12}px` }}
       >
         {messages.length === 0 && !isStreaming && (
-          <p className="text-center text-sm pt-8" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
+          <p className="text-center text-sm pt-4" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
             {assessmentCompleted ? "Speak, and the physician shall answer." : "Say hello to begin your examination."}
           </p>
         )}
@@ -327,36 +327,42 @@ export default function SpiritChat({
 
       {/* ── Fixed input bar — moves above keyboard ── */}
       <div
-        className="fixed left-0 right-0 z-50 bg-background"
+        className="fixed left-0 right-0 z-50"
         style={{
           bottom: `${kbOffset}px`,
-          borderTop: `1px solid ${borderColor}`,
           transition: kbOffset > 0 ? "none" : "bottom 0.15s ease-out",
         }}
       >
-        <form onSubmit={handleSubmit} className="flex max-w-[800px] mx-auto">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Speak to the physician..."
-            disabled={isStreaming || dailyLimitHit}
-            aria-label="Message Paracelsus"
-            className="flex-1 min-w-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={isStreaming || dailyLimitHit || !input.trim()}
-            className="shrink-0 w-[72px] sm:w-[100px] bg-accent py-3 text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-40"
-            style={{ borderLeft: `1px solid ${borderColor}` }}
-          >
-            Send
-          </button>
-        </form>
-        {remaining !== null && !dailyLimitHit && remaining > 0 && (
-          <p className="text-center text-[10px] text-muted pb-1">{remaining} free message{remaining !== 1 ? "s" : ""} remaining</p>
-        )}
+        <div
+          className="max-w-[800px] mx-auto bg-background"
+          style={{ border: `1px solid ${borderColor}`, borderBottom: kbOffset > 0 ? `1px solid ${borderColor}` : "none" }}
+        >
+          <form onSubmit={handleSubmit} className="flex">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Speak to the physician..."
+              disabled={isStreaming || dailyLimitHit}
+              aria-label="Message Paracelsus"
+              className="flex-1 min-w-0 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={isStreaming || dailyLimitHit || !input.trim()}
+              className="shrink-0 w-[72px] sm:w-[100px] bg-accent py-3 text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-40"
+              style={{ borderLeft: `1px solid ${borderColor}` }}
+            >
+              Send
+            </button>
+          </form>
+          {remaining !== null && !dailyLimitHit && remaining > 0 && (
+            <p className="text-center text-[10px] text-muted py-1" style={{ borderTop: `1px solid ${borderColor}` }}>
+              {remaining} free message{remaining !== 1 ? "s" : ""} remaining
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
