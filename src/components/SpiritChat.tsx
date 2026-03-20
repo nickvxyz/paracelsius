@@ -95,6 +95,9 @@ function SpiritMessage({ content, isNew }: { content: string; isNew: boolean }) 
   );
 }
 
+// ── Fixed input bar height (used for padding) ────────────────────
+const INPUT_BAR_HEIGHT = 52; // px — form height including border
+
 // ── Main component ───────────────────────────────────────────────
 
 export default function SpiritChat({
@@ -113,12 +116,33 @@ export default function SpiritChat({
   const [isStreaming, setIsStreaming] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const [dailyLimitHit, setDailyLimitHit] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const portraitRef = usePortrait();
 
   const isPaid = subscriptionStatus === "active";
   const remaining = isPaid ? null : Math.max(0, freeMessagesLimit - freeMessagesUsed);
+
+  // ── VisualViewport keyboard detection ──
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    // Enable manual keyboard handling if available
+    if ("virtualKeyboard" in navigator) {
+      (navigator as unknown as Record<string, { overlaysContent: boolean }>).virtualKeyboard.overlaysContent = true;
+    }
+
+    function onResize() {
+      const kbHeight = window.innerHeight - vv!.height;
+      setKeyboardOffset(kbHeight > 50 ? kbHeight : 0);
+    }
+
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -303,113 +327,110 @@ export default function SpiritChat({
 
   return (
     <>
-    <div
-      className="relative w-full max-w-[800px] mx-auto flex flex-col overflow-hidden flex-1 min-h-0"
-      style={{
-        border: `1px solid ${borderColor}`,
-      }}
-    >
-      {/* ── Top: Message history ── */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-5">
-        {messages.length === 0 && !isStreaming && (
-          <p
-            className="text-center text-sm pt-4"
-            style={{
-              color: "rgba(140,230,180,0.5)",
-              textShadow: "0 0 6px rgba(140,230,180,0.15)",
-            }}
-          >
-            {assessmentCompleted
-              ? "Speak, and the physician shall answer."
-              : "Say hello to begin your examination."}
-          </p>
-        )}
+      {/* ── Messages area (scrollable, with bottom padding for fixed input) ── */}
+      <div
+        className="w-full max-w-[800px] mx-auto flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+        style={{
+          borderLeft: `1px solid ${borderColor}`,
+          borderRight: `1px solid ${borderColor}`,
+          borderTop: `1px solid ${borderColor}`,
+          paddingBottom: `${INPUT_BAR_HEIGHT + 8}px`,
+        }}
+      >
+        <div className="p-4 space-y-5">
+          {messages.length === 0 && !isStreaming && (
+            <p
+              className="text-center text-sm pt-4"
+              style={{
+                color: "rgba(140,230,180,0.5)",
+                textShadow: "0 0 6px rgba(140,230,180,0.15)",
+              }}
+            >
+              {assessmentCompleted
+                ? "Speak, and the physician shall answer."
+                : "Say hello to begin your examination."}
+            </p>
+          )}
 
-        {messages.map((msg, i) => (
-          <div key={i}>
-            {msg.role === "user" ? (
-              <div className="text-right">
-                <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words" style={{ overflowWrap: "anywhere" }}>
-                  {msg.content}
-                </span>
-              </div>
-            ) : (
-              <div aria-live="polite">
-                <SpiritMessage
-                  content={renderContent(msg.content)}
-                  isNew={i === messages.length - 1 && !isStreaming}
-                />
-              </div>
-            )}
-
-            {/* Command renders */}
-            {msg.commands?.map((cmd, j) => (
-              <div key={j} className="mt-3">
-                {cmd.type === "assessment_result" && (
-                  <ShockMoment years={cmd.lifespan as number} />
-                )}
-                {cmd.type === "lifespan_update" && (
-                  <div className="space-y-2">
-                    <div className="text-center">
-                      <span
-                        className={`text-sm font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}
-                      >
-                        {(cmd.delta as number) >= 0 ? "+" : ""}
-                        {(cmd.delta as number).toFixed(1)} years
-                      </span>
-                      <span className="text-muted text-xs ml-2">
-                        {cmd.reason as string}
-                      </span>
-                    </div>
-                    <LifespanBar years={cmd.new_lifespan as number} animate={true} />
-                  </div>
-                )}
-                {cmd.type === "what_if" && (
-                  <div className="space-y-2 p-3 border border-accent/20 bg-accent/5">
-                    <p className="font-heading text-xs tracking-widest text-accent uppercase">
-                      What If: {cmd.scenario as string}
-                    </p>
-                    <LifespanBar years={cmd.projected_lifespan as number} animate={true} />
-                    <p className="text-xs text-muted">{cmd.recovery_timeline as string}</p>
-                  </div>
-                )}
-                {cmd.type === "daily_receipt" && (
-                  <DailyReceipt
-                    items={cmd.items as Array<{ habit: string; delta: number; unit: string }>}
-                    netDelta={cmd.net_delta as number}
-                    runningTotal={cmd.running_total as number}
+          {messages.map((msg, i) => (
+            <div key={i}>
+              {msg.role === "user" ? (
+                <div className="text-right">
+                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words" style={{ overflowWrap: "anywhere" }}>
+                    {msg.content}
+                  </span>
+                </div>
+              ) : (
+                <div aria-live="polite">
+                  <SpiritMessage
+                    content={renderContent(msg.content)}
+                    isNew={i === messages.length - 1 && !isStreaming}
                   />
-                )}
-                {cmd.type === "factor_committed" && (
-                  <div className="p-3 border border-green-400/20 bg-green-400/5">
-                    <p className="text-xs text-green-400 font-heading uppercase tracking-widest">
-                      Committed: {(cmd.factor as string).replace(/_/g, " ")}
-                    </p>
-                    <p className="text-xs text-muted mt-1">{cmd.plan as string}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
+                </div>
+              )}
 
-        {/* Typing indicator */}
-        {isStreaming && messages[messages.length - 1]?.content === "" && (
-          <div>
-            <span className="inline-flex gap-1 px-1 py-2">
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-            </span>
-          </div>
-        )}
+              {msg.commands?.map((cmd, j) => (
+                <div key={j} className="mt-3">
+                  {cmd.type === "assessment_result" && (
+                    <ShockMoment years={cmd.lifespan as number} />
+                  )}
+                  {cmd.type === "lifespan_update" && (
+                    <div className="space-y-2">
+                      <div className="text-center">
+                        <span className={`text-sm font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          {(cmd.delta as number) >= 0 ? "+" : ""}{(cmd.delta as number).toFixed(1)} years
+                        </span>
+                        <span className="text-muted text-xs ml-2">{cmd.reason as string}</span>
+                      </div>
+                      <LifespanBar years={cmd.new_lifespan as number} animate={true} />
+                    </div>
+                  )}
+                  {cmd.type === "what_if" && (
+                    <div className="space-y-2 p-3 border border-accent/20 bg-accent/5">
+                      <p className="font-heading text-xs tracking-widest text-accent uppercase">
+                        What If: {cmd.scenario as string}
+                      </p>
+                      <LifespanBar years={cmd.projected_lifespan as number} animate={true} />
+                      <p className="text-xs text-muted">{cmd.recovery_timeline as string}</p>
+                    </div>
+                  )}
+                  {cmd.type === "daily_receipt" && (
+                    <DailyReceipt
+                      items={cmd.items as Array<{ habit: string; delta: number; unit: string }>}
+                      netDelta={cmd.net_delta as number}
+                      runningTotal={cmd.running_total as number}
+                    />
+                  )}
+                  {cmd.type === "factor_committed" && (
+                    <div className="p-3 border border-green-400/20 bg-green-400/5">
+                      <p className="text-xs text-green-400 font-heading uppercase tracking-widest">
+                        Committed: {(cmd.factor as string).replace(/_/g, " ")}
+                      </p>
+                      <p className="text-xs text-muted mt-1">{cmd.plan as string}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
 
-        <div ref={messagesEndRef} />
+          {isStreaming && messages[messages.length - 1]?.content === "" && (
+            <div>
+              <span className="inline-flex gap-1 px-1 py-2">
+                <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
+                <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
+                <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
+              </span>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* ── Paywall freeze overlay ── */}
       {dailyLimitHit && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
           <div
             className="border bg-surface p-6 space-y-4 max-w-sm mx-4"
             style={{ borderColor }}
@@ -439,22 +460,25 @@ export default function SpiritChat({
         </div>
       )}
 
-      {/* ── Bottom: Input bar ── */}
+      {/* ── Fixed input bar — stays above keyboard ── */}
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
-        className="flex shrink-0"
-        style={{ borderTop: `1px solid ${borderColor}` }}
+        className="fixed left-0 right-0 z-50 flex max-w-[800px] mx-auto bg-background"
+        style={{
+          bottom: `${keyboardOffset}px`,
+          borderTop: `1px solid ${borderColor}`,
+          borderLeft: `1px solid ${borderColor}`,
+          borderRight: `1px solid ${borderColor}`,
+          borderBottom: `1px solid ${borderColor}`,
+          transition: keyboardOffset > 0 ? "none" : "bottom 0.15s ease-out",
+        }}
       >
         <input
           ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onFocus={() => {
-            setTimeout(() => {
-              inputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-            }, 300);
-          }}
           placeholder="Speak to the physician..."
           disabled={isStreaming || dailyLimitHit}
           aria-label="Message Paracelsus"
@@ -470,11 +494,9 @@ export default function SpiritChat({
         </button>
       </form>
 
-    </div>
-
       {/* Message counter — outside the panel */}
       {remaining !== null && !dailyLimitHit && remaining > 0 && (
-        <p className="text-center text-[10px] text-muted mt-2">
+        <p className="text-center text-[10px] text-muted mt-1">
           {remaining} free message{remaining !== 1 ? "s" : ""} remaining
         </p>
       )}

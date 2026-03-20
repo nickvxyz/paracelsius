@@ -1,51 +1,20 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import { useAuth } from "@/lib/hooks";
 import { PortraitProvider } from "@/lib/portrait-context";
 import Nav from "./Nav";
 import EmberParticles from "./EmberParticles";
 import CRTPortrait, { type CRTPortraitHandle } from "./CRTPortrait";
 
-function useViewportHeight() {
-  const [height, setHeight] = useState<string>("100dvh");
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    function onResize() {
-      // visualViewport.height = visible area excluding keyboard
-      setHeight(`${vv!.height}px`);
-    }
-
-    // Set initial
-    onResize();
-
-    vv.addEventListener("resize", onResize);
-    vv.addEventListener("scroll", onResize);
-
-    return () => {
-      vv.removeEventListener("resize", onResize);
-      vv.removeEventListener("scroll", onResize);
-    };
-  }, []);
-
-  return height;
-}
-
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const portraitRef = useRef<CRTPortraitHandle>(null);
-  const viewportHeight = useViewportHeight();
 
   return (
     <PortraitProvider value={portraitRef}>
       <EmberParticles />
-      <div
-        className="flex flex-col overflow-hidden"
-        style={{ height: viewportHeight }}
-      >
+      <div className="flex flex-col h-[100dvh] overflow-hidden">
         {/* Nav — fixed height */}
         <Nav user={user} onSignOut={signOut} />
 
