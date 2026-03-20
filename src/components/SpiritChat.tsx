@@ -100,12 +100,16 @@ export default function SpiritChat({
   const [subscribing, setSubscribing] = useState(false);
   const [dailyLimitHit, setDailyLimitHit] = useState(false);
   const [kbOffset, setKbOffset] = useState(0);
+  const [localUsed, setLocalUsed] = useState(freeMessagesUsed);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const portraitRef = usePortrait();
 
+  // Sync when prop changes (e.g. page refresh)
+  useEffect(() => { setLocalUsed(freeMessagesUsed); }, [freeMessagesUsed]);
+
   const isPaid = subscriptionStatus === "active";
-  const remaining = isPaid ? null : Math.max(0, freeMessagesLimit - freeMessagesUsed);
+  const remaining = isPaid ? null : Math.max(0, freeMessagesLimit - localUsed);
 
   // ── Keyboard detection via visualViewport ──
   useEffect(() => {
@@ -137,6 +141,7 @@ export default function SpiritChat({
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
     setIsStreaming(true);
+    if (!isPaid) setLocalUsed((prev) => prev + 1);
 
     try {
       const res = await fetch("/api/chat", {
@@ -376,18 +381,18 @@ export default function SpiritChat({
         {remaining !== null && !dailyLimitHit && (
           <div className="max-w-[800px] mx-auto px-3 pt-1.5 pb-1">
             <div className="flex items-center gap-2 text-[10px] text-muted">
-              <span className="shrink-0">{freeMessagesUsed} / {freeMessagesLimit} free daily messages used</span>
+              <span className="shrink-0">{localUsed} / {freeMessagesLimit} free daily messages used</span>
               <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent/60 transition-all"
-                  style={{ width: `${(freeMessagesUsed / freeMessagesLimit) * 100}%` }}
+                  style={{ width: `${(localUsed / freeMessagesLimit) * 100}%` }}
                 />
               </div>
               <span className="shrink-0" style={{ color: "rgba(140,230,180,0.6)" }}>
-                {Math.round((freeMessagesUsed / freeMessagesLimit) * 100)}%
+                {Math.round((localUsed / freeMessagesLimit) * 100)}%
               </span>
             </div>
-            {!isPaid && freeMessagesUsed > 0 && (
+            {!isPaid && localUsed > 0 && (
               <div className="flex items-center justify-between mt-0.5">
                 <span className="text-[10px] text-muted">Unlimited access</span>
                 <button
