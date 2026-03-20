@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [nameSaved, setNameSaved] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [tosConfirmed, setTosConfirmed] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/");
@@ -62,15 +63,15 @@ export default function ProfilePage() {
 
   if (!user || !session) return null;
 
-  const tosAccepted = !!(profile?.tos_accepted_at);
+  // ToS check — only show popup if profile loaded AND tos not accepted AND not already confirmed this session
+  const tosAccepted = tosConfirmed || !!(profile?.tos_accepted_at);
 
-  // Show Terms of Service consent popup if not accepted
-  if (!tosAccepted) {
+  if (profile && !tosAccepted) {
     return (
       <TermsConsent
         userId={user.id}
         accessToken={session.access_token}
-        onAccepted={() => refreshProfile()}
+        onAccepted={() => { setTosConfirmed(true); refreshProfile(); }}
         onDeclined={async () => {
           const { supabase: sb } = await import("@/lib/supabase");
           await sb.auth.signOut();
