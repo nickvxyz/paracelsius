@@ -93,6 +93,11 @@ export function buildSystemPrompt(
 
 ---
 
+LANGUAGE RULE (mandatory):
+Always respond in the same language the user writes in. If they write in English, respond in English. If they write in Russian, respond in Russian. If they switch languages mid-conversation, switch with them immediately. Match their language in every message.
+
+---
+
 GUARDRAILS (follow strictly):
 ${guardrails}
 
