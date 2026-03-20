@@ -6,6 +6,7 @@ import { useAuth, usePatientProfile, useSubscription } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import LifespanBar from "@/components/LifespanBar";
 import SpiritChat, { type ChatMessage } from "@/components/SpiritChat";
+import TermsConsent from "@/components/TermsConsent";
 
 type Tab = "terminal" | "examination";
 
@@ -60,6 +61,23 @@ export default function ProfilePage() {
   }
 
   if (!user || !session) return null;
+
+  const tosAccepted = !!(profile?.tos_accepted_at);
+
+  // Show Terms of Service consent popup if not accepted
+  if (!tosAccepted) {
+    return (
+      <TermsConsent
+        userId={user.id}
+        onAccepted={() => refreshProfile()}
+        onDeclined={async () => {
+          const { signOut } = await import("@/lib/supabase").then(m => ({ signOut: () => m.supabase.auth.signOut() }));
+          await signOut();
+          window.location.href = "/";
+        }}
+      />
+    );
+  }
 
   const rawLifespan = lifespanYears ?? (profile?.lifespan_years as number) ?? 94;
   const currentLifespan = isNaN(rawLifespan) ? 94 : rawLifespan;
