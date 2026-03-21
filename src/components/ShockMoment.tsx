@@ -99,7 +99,7 @@ export default function ShockMoment({ years, onComplete }: ShockMomentProps) {
         </div>
         {phase !== "glitch" && (
           <div
-            className="font-heading text-xs uppercase tracking-[0.2em] mt-1 transition-opacity duration-500"
+            className="font-heading text-[13px] uppercase tracking-[0.2em] mt-1 transition-opacity duration-500"
             style={{
               color: "var(--muted)",
               opacity: phase === "counting" ? 0.4 : 0.8,

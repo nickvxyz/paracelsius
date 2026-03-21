@@ -18,7 +18,7 @@ export default function About() {
           Then I died. Salzburg, 1541. I was forty-seven years old.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           The Rebirth
         </h2>
 
@@ -48,7 +48,7 @@ export default function About() {
           The behavior does not follow.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           The Protocol
         </h2>
 
@@ -74,7 +74,7 @@ export default function About() {
           you. The number will disturb you. That is the point.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           The Arrangement
         </h2>
 
@@ -92,7 +92,7 @@ export default function About() {
           most physicians survive whether or not you take their advice. I do not.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           Every Day
         </h2>
 
@@ -110,7 +110,7 @@ export default function About() {
           your remaining years.
         </p>
 
-        <p className="text-muted text-sm pt-4 border-t border-white/5">
+        <p className="text-muted text-[15px] pt-4 border-t border-white/5">
           The dose makes the poison. This has always been true. It was true when
           I first said it in 1538, and it is true now as you read it on a screen
           that is slowly damaging your eyes. You&apos;re welcome.

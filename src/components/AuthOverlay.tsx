@@ -70,7 +70,7 @@ export default function AuthOverlay({ open, onClose }: AuthOverlayProps) {
 
       {/* Content */}
       <div className="flex flex-col items-center gap-8 px-6 max-w-sm w-full">
-        <h2 className="font-heading text-lg font-bold tracking-[1.5px] text-accent">
+        <h2 className="font-heading text-[15px] font-bold tracking-[1.5px] text-accent">
           PARACELSUS
         </h2>
 
@@ -78,7 +78,7 @@ export default function AuthOverlay({ open, onClose }: AuthOverlayProps) {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 border border-white/10 bg-surface px-5 py-4 text-sm text-foreground transition-all hover:border-accent/30 disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-3 border border-white/10 bg-surface px-5 py-4 text-[15px] text-foreground transition-all hover:border-accent/30 disabled:opacity-40"
           >
             <svg
               width="18"
@@ -109,7 +109,7 @@ export default function AuthOverlay({ open, onClose }: AuthOverlayProps) {
 
         {error && (
           <p
-            className="text-xs text-center leading-5"
+            className="text-[13px] text-center leading-5"
             style={{
               color: "rgba(140,230,180,0.9)",
               textShadow: "0 0 8px rgba(140,230,180,0.3)",
@@ -119,7 +119,7 @@ export default function AuthOverlay({ open, onClose }: AuthOverlayProps) {
           </p>
         )}
 
-        <p className="text-muted text-[10px] text-center leading-4 max-w-[260px]">
+        <p className="text-muted text-[13px] text-center leading-4 max-w-[260px]">
           By entering, you acknowledge that Paracelsus is an educational
           experience, not medical advice.
         </p>

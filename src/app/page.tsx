@@ -41,7 +41,7 @@ function HomeContent() {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p
-          className="text-sm"
+          className="text-[15px]"
           style={{
             color: "rgba(140,230,180,0.6)",
             textShadow: "0 0 8px rgba(140,230,180,0.2)",
@@ -59,7 +59,7 @@ function HomeContent() {
     <div className="flex flex-col items-center gap-3 px-4 py-4 pb-8">
       {authError && (
         <p
-          className="text-sm text-center leading-6"
+          className="text-[15px] text-center leading-6"
           style={{
             color: "rgba(140,230,180,0.9)",
             textShadow: "0 0 8px rgba(140,230,180,0.3)",
@@ -79,20 +79,20 @@ function HomeContent() {
         />
       </div>
 
-      <h2 className="font-heading text-base sm:text-xl font-bold tracking-wider text-accent text-center mt-6 shrink-0">
+      <h2 className="font-heading text-[15px] font-bold tracking-wider text-accent text-center mt-6 shrink-0">
         EXAMINE YOUR LIFESPAN NOW
       </h2>
 
       <button
         onClick={() => setAuthOpen(true)}
-        className="shrink-0 bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+        className="shrink-0 bg-accent px-8 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
       >
         Sign In
       </button>
 
       {patientCount !== null && patientCount > 0 && (
         <p
-          className="text-xs mt-4 shrink-0"
+          className="text-[13px] mt-4 shrink-0"
           style={{
             color: "rgba(140,230,180,0.7)",
             textShadow: "0 0 6px rgba(140,230,180,0.15)",
@@ -113,7 +113,7 @@ export default function Home() {
       fallback={
         <div className="flex flex-1 items-center justify-center">
           <p
-            className="text-sm"
+            className="text-[15px]"
             style={{
               color: "rgba(140,230,180,0.6)",
               textShadow: "0 0 8px rgba(140,230,180,0.2)",

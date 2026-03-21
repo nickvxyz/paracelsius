@@ -42,40 +42,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const origin = req.headers.get("origin") || req.nextUrl.origin;
+  // Build Suby.fi checkout URL with pre-filled email
+  const paymentUrl = `https://app.suby.fi/pay/${productId}?email=${encodeURIComponent(user.email || "")}&ref=${encodeURIComponent(user.id)}`;
 
-  try {
-    const res = await fetch("https://api.suby.fi/api/payment/initiate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Suby-Api-Key": apiKey,
-      },
-      body: JSON.stringify({
-        productId,
-        customerEmail: user.email,
-        externalRef: user.id,
-        metadata: { source: "paracelsus", userId: user.id, product: "l1_examination" },
-        successUrl: `${origin}/profile?exam_purchased=true`,
-        cancelUrl: `${origin}/profile`,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      const errMsg = data.error?.message || "Payment initiation failed";
-      return Response.json({ error: errMsg }, { status: res.status || 500 });
-    }
-
-    return Response.json({
-      paymentUrl: data.data.paymentUrl,
-      paymentId: data.data.paymentId,
-    });
-  } catch {
-    return Response.json(
-      { error: "Payment service unavailable" },
-      { status: 503 }
-    );
-  }
+  return Response.json({ paymentUrl });
 }

@@ -57,9 +57,11 @@ export function usePatientProfile(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) {
+      setProfile(null);
       setLoading(false);
       return;
     }
+    setLoading(true);
     supabase
       .from("patient_profiles")
       .select("*")
@@ -90,9 +92,11 @@ export function useSubscription(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) {
+      setSub(null);
       setLoading(false);
       return;
     }
+    setLoading(true);
     supabase
       .from("subscriptions")
       .select("*")

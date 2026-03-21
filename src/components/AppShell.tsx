@@ -9,7 +9,7 @@ import EmberParticles from "./EmberParticles";
 import CRTPortrait, { type CRTPortraitHandle } from "./CRTPortrait";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const portraitRef = useRef<CRTPortraitHandle>(null);
   const pathname = usePathname();
 
@@ -20,13 +20,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <EmberParticles />
       <div className="flex flex-col h-[100dvh] overflow-x-hidden overflow-y-hidden">
         {/* Nav */}
-        <Nav user={user} onSignOut={signOut} />
+        <Nav user={user} loading={authLoading} onSignOut={signOut} />
 
         {/* Main — scrollable for all pages except profile (which has its own chat scroll) */}
         <main className={`relative z-10 flex flex-col items-center flex-1 min-h-0 overflow-x-hidden ${isProfile ? "overflow-y-hidden" : "overflow-y-auto"}`}>
           <div className={`w-full max-w-[100vw] overflow-x-hidden flex flex-col items-center ${isProfile ? "flex-1 min-h-0 overflow-hidden" : ""}`}>
             {/* CRT Portrait — scrolls with content, hidden on mobile profile */}
-            <div className={`shrink-0 portrait-container ${isProfile ? "hidden sm:block" : ""}`}>
+            <div className={`shrink-0 portrait-container ${isProfile ? "hidden" : ""}`}>
               <CRTPortrait ref={portraitRef} />
             </div>
             {children}
@@ -35,7 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Footer — hidden on profile */}
         <footer className={`relative z-10 shrink-0 border-t border-white/5 py-2 px-4 ${isProfile ? "hidden" : ""}`}>
-          <div className="max-w-2xl mx-auto flex items-center justify-between text-[10px] text-muted">
+          <div className="max-w-2xl mx-auto flex items-center justify-between text-[13px] text-muted">
             <span>&copy; {new Date().getFullYear()} Paracelsus</span>
             <div className="flex items-center gap-3">
               <a href="https://x.com/paracelsus_live" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors" aria-label="X (Twitter)">

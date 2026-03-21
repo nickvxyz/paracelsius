@@ -6,7 +6,7 @@ export default function Terms() {
           Terms of Service
         </h1>
 
-        <p className="text-muted text-sm">
+        <p className="text-muted text-[15px]">
           Last updated: March 20, 2026
         </p>
 
@@ -16,7 +16,7 @@ export default function Terms() {
           do not use the application.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           1. Service Description
         </h2>
 
@@ -27,7 +27,7 @@ export default function Terms() {
           figure Paracelsus (1493&ndash;1541) to deliver this information in an engaging format.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           2. Not a Medical Service
         </h2>
 
@@ -53,7 +53,7 @@ export default function Terms() {
           advice because of something you read or received through Paracelsus.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           3. AI-Generated Content
         </h2>
 
@@ -70,7 +70,7 @@ export default function Terms() {
           Paracelsus bears no responsibility for decisions made based on this content.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           4. User Responsibilities
         </h2>
 
@@ -87,7 +87,7 @@ export default function Terms() {
           <li>The information you provide is voluntary and you accept the risks of sharing personal health data with an AI system.</li>
         </ul>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           5. Limitation of Liability
         </h2>
 
@@ -112,7 +112,7 @@ export default function Terms() {
           advised of the possibility of such damages.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           6. Assumption of Risk
         </h2>
 
@@ -124,7 +124,7 @@ export default function Terms() {
           information provided.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           7. Third-Party References
         </h2>
 
@@ -136,7 +136,7 @@ export default function Terms() {
           The use of these frameworks is for educational and illustrative purposes only.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           8. Data and Privacy
         </h2>
 
@@ -147,7 +147,7 @@ export default function Terms() {
           parties. You may request deletion of your data by contacting us.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           9. Subscription and Payments
         </h2>
 
@@ -158,7 +158,7 @@ export default function Terms() {
           our payment provider.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           10. Modifications
         </h2>
 
@@ -168,7 +168,7 @@ export default function Terms() {
           updated terms. We will make reasonable efforts to notify users of material changes.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           11. Governing Law
         </h2>
 
@@ -177,7 +177,7 @@ export default function Terms() {
           applicable law, without regard to conflict of law principles.
         </p>
 
-        <h2 className="font-heading text-xl font-semibold tracking-wider text-accent pt-4">
+        <h2 className="font-heading text-xl font-bold tracking-wider text-accent pt-4">
           12. Contact
         </h2>
 
@@ -188,7 +188,7 @@ export default function Terms() {
           </a>
         </p>
 
-        <p className="text-muted text-sm pt-4 border-t border-white/5">
+        <p className="text-muted text-[15px] pt-4 border-t border-white/5">
           By using Paracelsus, you acknowledge that you have read, understood, and agree
           to be bound by these Terms of Service.
         </p>

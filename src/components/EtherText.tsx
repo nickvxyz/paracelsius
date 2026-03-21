@@ -125,7 +125,7 @@ export default function EtherText({
       {lineStates.map((ls, i) => (
         <div
           key={`${i}-${ls.text}`}
-          className="font-body text-sm text-center leading-relaxed transition-opacity duration-700"
+          className="font-body text-[15px] text-center leading-relaxed transition-opacity duration-700"
           style={{
             opacity: ls.opacity,
             textShadow:

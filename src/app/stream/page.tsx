@@ -160,12 +160,12 @@ export default function StreamPage() {
       {/* Top: PARACELSUS title */}
       <div className="shrink-0 text-center">
         <h1
-          className="font-heading text-lg sm:text-xl font-bold tracking-[3px] uppercase"
+          className="font-heading text-[15px] sm:text-xl font-bold tracking-[3px] uppercase"
           style={{ color: "#ff6b1a" }}
         >
           Paracelsus
         </h1>
-        <p className="text-[10px] text-muted tracking-widest uppercase mt-1 font-heading">
+        <p className="text-[13px] text-muted tracking-widest uppercase mt-1 font-heading">
           Live Stream
         </p>
       </div>
@@ -207,7 +207,7 @@ export default function StreamPage() {
                   >
                     {pad(unit.val)}
                   </div>
-                  <div className="text-[9px] sm:text-[10px] text-muted tracking-widest uppercase font-heading mt-1">
+                  <div className="text-[13px] text-muted tracking-widest uppercase font-heading mt-1">
                     {unit.label}
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export default function StreamPage() {
           {visibleLines.map((line, i) => (
             <p
               key={`${slideIndex}-${i}`}
-              className="text-center text-sm sm:text-base leading-relaxed font-body"
+              className="text-center text-[15px] sm:text-[15px] leading-relaxed font-body"
               style={{
                 color: "rgba(160,240,190,0.85)",
                 textShadow: "0 0 8px rgba(140,230,180,0.25), 0 0 20px rgba(120,200,160,0.1)",
@@ -248,10 +248,10 @@ export default function StreamPage() {
 
       {/* Bottom: date + time */}
       <div className="shrink-0 text-center space-y-1">
-        <p className="font-heading text-xs tracking-widest uppercase" style={{ color: "#ff6b1a" }}>
+        <p className="font-heading text-[13px] tracking-wider uppercase" style={{ color: "#ff6b1a" }}>
           March 22, 2026 &middot; 15:00 CET
         </p>
-        <p className="text-[10px] text-muted">paracelsus.live</p>
+        <p className="text-[13px] text-muted">paracelsus.live</p>
       </div>
 
       {/* Cursor blink keyframes */}

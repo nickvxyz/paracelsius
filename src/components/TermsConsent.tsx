@@ -50,7 +50,7 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-4">
       <div className="w-full max-w-md bg-surface border border-white/10 p-6 space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold tracking-wider text-accent">
+          <h2 className="font-heading text-[15px] font-bold tracking-wider text-accent">
             Before you continue
           </h2>
           <button
@@ -62,11 +62,11 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
           </button>
         </div>
 
-        <p className="text-sm text-foreground/80 leading-relaxed">
+        <p className="text-[15px] text-foreground/80 leading-relaxed">
           Before we go any further, we need to make sure you&apos;ve seen the legal stuff.
         </p>
 
-        <p className="text-sm text-foreground/80 leading-relaxed">
+        <p className="text-[15px] text-foreground/80 leading-relaxed">
           By clicking &ldquo;I agree&rdquo;, you&apos;re saying you&apos;ve read and
           understood our Terms of Service.
         </p>
@@ -78,7 +78,7 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
             onChange={(e) => setTosChecked(e.target.checked)}
             className="mt-1 w-4 h-4 shrink-0 accent-accent"
           />
-          <span className="text-sm text-foreground/80 leading-relaxed">
+          <span className="text-[15px] text-foreground/80 leading-relaxed">
             I&apos;ve read and agree to the{" "}
             <a
               href="/terms"
@@ -98,7 +98,7 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
             onChange={(e) => setEmailChecked(e.target.checked)}
             className="mt-1 w-4 h-4 shrink-0 accent-accent"
           />
-          <span className="text-sm text-muted leading-relaxed">
+          <span className="text-[15px] text-muted leading-relaxed">
             I&apos;d like to receive news and updates from Paracelsus
           </span>
         </label>
@@ -106,14 +106,14 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
         <div className="flex gap-3 pt-2">
           <button
             onClick={onDeclined}
-            className="flex-1 py-3 text-xs font-heading font-bold uppercase tracking-wider text-muted border border-white/10 hover:text-foreground transition-colors"
+            className="flex-1 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-muted border border-white/10 hover:text-foreground transition-colors"
           >
             No thanks
           </button>
           <button
             onClick={handleAgree}
             disabled={!tosChecked || submitting}
-            className="flex-1 py-3 text-xs font-heading font-bold uppercase tracking-wider bg-accent text-background hover:opacity-90 transition-opacity disabled:opacity-30"
+            className="flex-1 py-3 text-[13px] font-heading font-bold uppercase tracking-wider bg-accent text-background hover:opacity-90 transition-opacity disabled:opacity-30"
           >
             {submitting ? "..." : "I agree"}
           </button>

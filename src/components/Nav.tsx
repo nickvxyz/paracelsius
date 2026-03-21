@@ -7,16 +7,17 @@ import AuthOverlay from "./AuthOverlay";
 
 interface NavProps {
   user?: { email?: string } | null;
+  loading?: boolean;
   onSignOut?: () => void;
 }
 
-export default function Nav({ user, onSignOut }: NavProps) {
+export default function Nav({ user, loading, onSignOut }: NavProps) {
   const pathname = usePathname();
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const linkClass = (path: string) =>
-    `uppercase tracking-[1px] text-xs transition-colors hover:text-accent ${
+    `uppercase tracking-[1px] text-[13px] transition-colors hover:text-accent ${
       pathname === path ? "text-accent" : "text-muted"
     }`;
 
@@ -30,11 +31,13 @@ export default function Nav({ user, onSignOut }: NavProps) {
           PARACELSUS
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden sm:flex items-center gap-5">
-          <Link href={user ? "/profile" : "/"} className={linkClass(user ? "/profile" : "/")}>
-            Home
-          </Link>
+        {/* Desktop nav — hidden while auth loads to prevent flash */}
+        <div className={`hidden sm:flex items-center gap-5 ${loading ? "invisible" : ""}`}>
+          {!user && (
+            <Link href="/" className={linkClass("/")}>
+              Home
+            </Link>
+          )}
           <Link href="/about" className={linkClass("/about")}>
             About
           </Link>
@@ -45,7 +48,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
               </Link>
               <button
                 onClick={onSignOut}
-                className="uppercase tracking-[1px] text-xs text-muted hover:text-accent transition-colors"
+                className="uppercase tracking-[1px] text-[13px] text-muted hover:text-accent transition-colors"
               >
                 Sign Out
               </button>
@@ -53,7 +56,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
           ) : (
             <button
               onClick={() => setAuthOpen(true)}
-              className="font-heading text-[11px] font-bold uppercase tracking-[1.1px] bg-accent text-background px-[18px] py-2 hover:opacity-85 transition-opacity"
+              className="font-heading text-[13px] font-bold uppercase tracking-[1.1px] bg-accent text-background px-[18px] py-2 hover:opacity-85 transition-opacity"
             >
               Sign In
             </button>
@@ -74,14 +77,18 @@ export default function Nav({ user, onSignOut }: NavProps) {
       {/* Mobile menu — overlays content */}
       {menuOpen && (
         <div className="sm:hidden absolute left-0 right-0 top-full z-30 border-t border-white/5 bg-background px-4 py-4 space-y-3 shadow-lg">
-          <Link
-            href={user ? "/profile" : "/"}
-            className={`block py-2 ${linkClass(user ? "/profile" : "/")}`}
-            onClick={() => setMenuOpen(false)}
-          >
-            Home
-          </Link>
-          <div className="border-t border-white/5" />
+          {!user && (
+            <>
+              <Link
+                href="/"
+                className={`block py-2 ${linkClass("/")}`}
+                onClick={() => setMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <div className="border-t border-white/5" />
+            </>
+          )}
           <Link
             href="/about"
             className={`block py-2 ${linkClass("/about")}`}
@@ -105,7 +112,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
                   setMenuOpen(false);
                   onSignOut?.();
                 }}
-                className="block py-2 uppercase tracking-[1px] text-xs text-muted hover:text-accent transition-colors"
+                className="block py-2 uppercase tracking-[1px] text-[13px] text-muted hover:text-accent transition-colors"
               >
                 Sign Out
               </button>
@@ -118,7 +125,7 @@ export default function Nav({ user, onSignOut }: NavProps) {
                   setMenuOpen(false);
                   setAuthOpen(true);
                 }}
-                className="block w-full py-3 bg-accent text-center text-xs font-heading font-bold uppercase tracking-wider text-background"
+                className="block w-full py-3 bg-accent text-center text-[13px] font-heading font-bold uppercase tracking-wider text-background"
               >
                 Sign In
               </button>

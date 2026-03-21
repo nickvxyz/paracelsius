@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
     .eq("user_id", user.id);
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("[accept-terms] DB error:", error.message);
+    return Response.json({ error: "Failed to save consent" }, { status: 500 });
   }
 
   return Response.json({ ok: true });

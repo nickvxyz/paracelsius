@@ -18,13 +18,13 @@ export default function DailyReceipt({
   runningTotal,
 }: DailyReceiptProps) {
   return (
-    <div className="w-full max-w-sm mx-auto my-4 font-body text-xs">
+    <div className="w-full max-w-sm mx-auto my-4 font-body text-[13px]">
       <div className="border border-white/10 bg-surface p-4 space-y-3">
         <div className="text-center border-b border-dashed border-white/10 pb-3">
-          <p className="font-heading text-[10px] tracking-[0.3em] text-accent uppercase">
+          <p className="font-heading text-[13px] tracking-[0.3em] text-accent uppercase">
             Daily Life Receipt
           </p>
-          <p className="text-muted text-[10px] mt-1">
+          <p className="text-muted text-[13px] mt-1">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -67,7 +67,7 @@ export default function DailyReceipt({
         </div>
 
         <div className="text-center border-t border-dashed border-white/10 pt-3">
-          <p className="text-muted text-[10px] italic">
+          <p className="text-muted text-[13px] italic">
             The dose makes the poison. &mdash; Paracelsus, 1538
           </p>
         </div>

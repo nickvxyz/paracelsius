@@ -71,7 +71,7 @@ export default function AuthDropdown({ trigger }: AuthDropdownProps) {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 border border-white/10 bg-surface-light px-4 py-3 text-sm text-foreground transition-all hover:border-accent/30 disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-3 border border-white/10 bg-surface-light px-4 py-3 text-[15px] text-foreground transition-all hover:border-accent/30 disabled:opacity-40"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -84,7 +84,7 @@ export default function AuthDropdown({ trigger }: AuthDropdownProps) {
 
           {error && (
             <p
-              className="text-xs text-center leading-5"
+              className="text-[13px] text-center leading-5"
               style={{
                 color: "rgba(140,230,180,0.9)",
                 textShadow: "0 0 8px rgba(140,230,180,0.3)",

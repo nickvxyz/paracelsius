@@ -202,13 +202,13 @@ export default function ChatWindow({
       <div className="border border-white/10 bg-surface p-4 h-[28rem] overflow-y-auto">
         {messages.length === 0 && !isStreaming && (
           <div className="text-center mt-32 space-y-3">
-            <p className="text-muted text-sm">
+            <p className="text-muted text-[15px]">
               {assessmentCompleted
                 ? "Speak, and Paracelsus shall answer."
                 : "Paracelsus awaits your first words to begin the examination."}
             </p>
             {!assessmentCompleted && (
-              <p className="text-accent/60 text-xs">
+              <p className="text-accent/60 text-[13px]">
                 Say hello to start your initial assessment
               </p>
             )}
@@ -221,7 +221,7 @@ export default function ChatWindow({
               className={`${msg.role === "user" ? "text-right" : "text-left"}`}
             >
               <span
-                className={`inline-block max-w-[85%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`inline-block max-w-[85%] px-3 py-2 text-[15px] leading-relaxed whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-accent/20 text-foreground"
                     : "bg-surface-light text-foreground"
@@ -246,12 +246,12 @@ export default function ChatWindow({
                   <div className="space-y-2">
                     <div className="text-center">
                       <span
-                        className={`text-sm font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}
+                        className={`text-[15px] font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}
                       >
                         {(cmd.delta as number) >= 0 ? "+" : ""}
                         {(cmd.delta as number).toFixed(1)} years
                       </span>
-                      <span className="text-muted text-xs ml-2">
+                      <span className="text-muted text-[13px] ml-2">
                         {cmd.reason as string}
                       </span>
                     </div>
@@ -263,14 +263,14 @@ export default function ChatWindow({
                 )}
                 {cmd.type === "what_if" && (
                   <div className="space-y-2 p-3 border border-accent/20 bg-accent/5">
-                    <p className="font-heading text-xs tracking-widest text-accent uppercase">
+                    <p className="font-heading text-[13px] tracking-wider text-accent uppercase">
                       What If: {cmd.scenario as string}
                     </p>
                     <LifespanBar
                       years={cmd.projected_lifespan as number}
                       animate={true}
                     />
-                    <p className="text-xs text-muted">
+                    <p className="text-[13px] text-muted">
                       {cmd.recovery_timeline as string}
                     </p>
                   </div>
@@ -322,12 +322,12 @@ export default function ChatWindow({
               : "Say hello to begin your examination..."
           }
           disabled={isStreaming}
-          className="flex-1 bg-surface-light px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
+          className="flex-1 bg-surface-light px-4 py-3 text-[15px] text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={isStreaming || !input.trim()}
-          className="bg-accent px-5 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="bg-accent px-5 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           Send
         </button>
@@ -335,7 +335,7 @@ export default function ChatWindow({
 
       {/* Free message counter */}
       {remainingFree !== null && (
-        <p className="text-center text-xs text-muted">
+        <p className="text-center text-[13px] text-muted">
           {remainingFree > 0
             ? `${remainingFree} free message${remainingFree !== 1 ? "s" : ""} remaining`
             : "Free messages exhausted"}

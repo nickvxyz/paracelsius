@@ -64,7 +64,7 @@ export default function LifespanBar({
     <div className="w-full space-y-2">
       {showLabels && (
         <div className="flex items-baseline justify-between">
-          <span className="font-heading text-xs tracking-widest text-muted uppercase">
+          <span className="font-heading text-[13px] tracking-wider text-muted uppercase">
             Projected Lifespan
           </span>
           <span
@@ -72,7 +72,7 @@ export default function LifespanBar({
             style={{ color: getBarColor(displayYears) }}
           >
             {displayYears.toFixed(1)}
-            <span className="text-sm text-muted ml-1">/ {maxYears} yrs</span>
+            <span className="text-[15px] text-muted ml-1">/ {maxYears} yrs</span>
           </span>
         </div>
       )}
@@ -113,7 +113,7 @@ export default function LifespanBar({
           {decades.map((d) => (
             <span
               key={d}
-              className="absolute text-[10px] text-muted -translate-x-1/2 font-body"
+              className="absolute text-[13px] text-muted -translate-x-1/2 font-body"
               style={{ left: `${(d / maxYears) * 100}%` }}
             >
               {d}

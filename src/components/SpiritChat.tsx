@@ -197,7 +197,7 @@ export default function SpiritChat({
     try {
       const res = await fetch("/api/subscribe", { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } });
       const data = await res.json();
-      if (data.paymentUrl) { window.location.href = data.paymentUrl; }
+      if (data.paymentUrl) { window.open(data.paymentUrl, "_blank"); setSubscribing(false); }
       else { alert(data.error || "Could not start checkout."); setSubscribing(false); }
     } catch { alert("Payment service unavailable."); setSubscribing(false); }
   }
@@ -213,7 +213,7 @@ export default function SpiritChat({
           <button
             onClick={handleSubscribe}
             disabled={subscribing}
-            className="py-3 px-8 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity border border-orange-400/30"
+            className="py-3 px-8 text-center text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity outline-none"
             style={{ backgroundColor: "#ff6b1a", boxShadow: "0 0 15px rgba(255,107,26,0.25)" }}
           >
             {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
@@ -227,14 +227,20 @@ export default function SpiritChat({
         style={{ paddingBottom: `${inputBarH + 12}px` }}
       >
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center pt-4 space-y-2" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
-            <p className="text-sm">
-              {examPurchased
-                ? "Your examination is ready. Say anything to begin."
-                : "Speak with Paracelsus about your longevity."
-              }
-            </p>
-            <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+          <div className="flex flex-col items-center text-center pt-8 space-y-4">
+            <img
+              src="/paracelsus-portrait.png"
+              alt="Paracelsus"
+              className="w-16 h-16 rounded-sm object-cover opacity-60"
+              style={{ border: "1px solid rgba(140,230,180,0.2)" }}
+            />
+            <h3
+              className="font-heading text-[15px] font-bold tracking-widest uppercase"
+              style={{ color: "rgba(140,230,180,0.8)" }}
+            >
+              {examPurchased ? "Begin Your Examination" : "Longevity Terminal"}
+            </h3>
+            <p className="text-[15px] text-muted max-w-xs mx-auto" style={{ lineHeight: "20px" }}>
               {examPurchased
                 ? "Paracelsus will assess 17 lifestyle factors from Dr. Zolman\u2019s protocol and calculate your projected lifespan."
                 : "Ask about the Level 1 Longevity Protocol, your lifestyle, or what factors determine how long you will live."
@@ -248,7 +254,7 @@ export default function SpiritChat({
             <div key={i}>
               {msg.role === "user" ? (
                 <div className="text-left">
-                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-base text-foreground/90 break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere" }}>
+                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-[15px] text-foreground/90 break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere", lineHeight: "20px" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -262,10 +268,11 @@ export default function SpiritChat({
                   />
                   <div className="min-w-0 flex-1">
                     <div
-                      className="text-base leading-relaxed whitespace-pre-wrap break-words"
+                      className="text-[15px] whitespace-pre-wrap break-words"
                       style={{
                         color: "rgba(160,240,190,0.9)",
                         textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
+                        lineHeight: "20px",
                       }}
                     >
                       {renderContent(msg.content)}
@@ -280,26 +287,26 @@ export default function SpiritChat({
                   {cmd.type === "lifespan_update" && (
                     <div className="space-y-2">
                       <div className="text-center">
-                        <span className={`text-sm font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                        <span className={`text-[15px] font-bold ${(cmd.delta as number) >= 0 ? "text-green-400" : "text-red-400"}`}>
                           {(cmd.delta as number) >= 0 ? "+" : ""}{(cmd.delta as number).toFixed(1)} years
                         </span>
-                        <span className="text-muted text-xs ml-2">{cmd.reason as string}</span>
+                        <span className="text-muted text-[13px] ml-2">{cmd.reason as string}</span>
                       </div>
                       <LifespanBar years={cmd.new_lifespan as number} animate={true} />
                     </div>
                   )}
                   {cmd.type === "what_if" && (
                     <div className="space-y-2 p-3 border border-accent/20 bg-accent/5">
-                      <p className="font-heading text-xs tracking-widest text-accent uppercase">What If: {cmd.scenario as string}</p>
+                      <p className="font-heading text-[13px] tracking-wider text-accent uppercase">What If: {cmd.scenario as string}</p>
                       <LifespanBar years={cmd.projected_lifespan as number} animate={true} />
-                      <p className="text-xs text-muted">{cmd.recovery_timeline as string}</p>
+                      <p className="text-[13px] text-muted">{cmd.recovery_timeline as string}</p>
                     </div>
                   )}
                   {cmd.type === "daily_receipt" && <DailyReceipt items={cmd.items as Array<{habit:string;delta:number;unit:string}>} netDelta={cmd.net_delta as number} runningTotal={cmd.running_total as number} />}
                   {cmd.type === "factor_committed" && (
                     <div className="p-3 border border-green-400/20 bg-green-400/5">
-                      <p className="text-xs text-green-400 font-heading uppercase tracking-widest">Committed: {(cmd.factor as string).replace(/_/g, " ")}</p>
-                      <p className="text-xs text-muted mt-1">{cmd.plan as string}</p>
+                      <p className="text-[13px] text-green-400 font-heading uppercase tracking-wider">Committed: {(cmd.factor as string).replace(/_/g, " ")}</p>
+                      <p className="text-[13px] text-muted mt-1">{cmd.plan as string}</p>
                     </div>
                   )}
                 </div>
@@ -315,7 +322,7 @@ export default function SpiritChat({
                 className="w-7 h-7 rounded-sm shrink-0 object-cover spirit-thinking"
                 style={{ border: "1px solid rgba(140,230,180,0.3)" }}
               />
-              <span className="text-xs mt-2" style={{ color: "rgba(140,230,180,0.4)" }}>...</span>
+              <span className="text-[13px] mt-2" style={{ color: "rgba(140,230,180,0.4)" }}>...</span>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -328,15 +335,15 @@ export default function SpiritChat({
           <div className="border bg-surface p-6 space-y-4 max-w-sm mx-4" style={{ borderColor }} role="alertdialog">
             <div className="text-center space-y-2">
               <div className="text-accent text-2xl">&#x2620;</div>
-              <h3 className="font-heading text-sm tracking-widest text-accent uppercase">Free Messages Used</h3>
-              <p className="text-muted text-xs">You have used all 30 free messages for today.</p>
+              <h3 className="font-heading text-[15px] font-bold tracking-widest text-accent uppercase">Free Messages Used</h3>
+              <p className="text-muted text-[13px]">You have used all 30 free messages for today.</p>
             </div>
             {!examPurchased && (
-              <button onClick={handleSubscribe} disabled={subscribing} className="block w-full bg-accent py-3 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50">
+              <button onClick={handleSubscribe} disabled={subscribing} className="block w-full bg-accent py-3 text-center text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50">
                 {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
               </button>
             )}
-            <p className="text-center text-xs text-muted">Return tomorrow for 30 more free messages</p>
+            <p className="text-center text-[13px] text-muted">Return tomorrow for 30 more free messages</p>
           </div>
         </div>
       )}
@@ -369,7 +376,7 @@ export default function SpiritChat({
               disabled={isStreaming || dailyLimitHit}
               aria-label="Message Paracelsus"
               rows={2}
-              className="flex-1 min-w-0 bg-transparent px-3 py-4 text-base text-foreground focus:outline-none disabled:opacity-50 resize-none"
+              className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[15px] text-foreground focus:outline-none disabled:opacity-50 resize-none"
               style={{
                 maxHeight: "120px",
               }}
@@ -377,7 +384,7 @@ export default function SpiritChat({
             <button
               type="submit"
               disabled={isStreaming || dailyLimitHit || !input.trim()}
-              className="shrink-0 px-4 py-4 text-xs font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
+              className="shrink-0 px-4 py-4 text-[13px] font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
             >
               Send
             </button>
@@ -386,7 +393,7 @@ export default function SpiritChat({
         {/* Free messages counter */}
         {remaining !== null && !dailyLimitHit && (
           <div className="max-w-[800px] mx-auto px-3 py-1 bg-background">
-            <div className="flex items-center gap-2 text-[10px] text-muted">
+            <div className="flex items-center gap-2 text-[13px] text-muted">
               <span className="shrink-0">{localUsed}/{freeMessagesLimit} free messages</span>
               <div className="flex-1 h-[2px] bg-white/5 overflow-hidden">
                 <div

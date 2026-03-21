@@ -18,7 +18,15 @@ export default function ProfilePage() {
   const { sub, loading: subLoading, refresh: refreshSub } = useSubscription(user?.id);
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<Tab>("terminal");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#examination") return "examination";
+    return "terminal";
+  });
+
+  // Persist active tab in URL hash
+  useEffect(() => {
+    window.location.hash = activeTab === "examination" ? "examination" : "";
+  }, [activeTab]);
   const [lifespanYears, setLifespanYears] = useState<number | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -64,6 +72,27 @@ export default function ProfilePage() {
     if (profile?.display_name) setDisplayName(profile.display_name as string);
   }, [profile?.display_name]);
 
+  // ── Load chat history on mount ──
+  useEffect(() => {
+    if (!user?.id || chatMessages.length > 0) return;
+    supabase
+      .from("messages")
+      .select("role, content")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(15)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setChatMessages(
+            data.reverse().map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            }))
+          );
+        }
+      });
+  }, [user?.id]);
+
   const handleLifespanUpdate = useCallback((years: number) => {
     setLifespanYears(years);
     refreshProfile();
@@ -83,10 +112,10 @@ export default function ProfilePage() {
     setTimeout(() => setNameSaved(false), 1500);
   };
 
-  if (authLoading || profileLoading || subLoading) {
+  if (authLoading || profileLoading || subLoading || (user && !profile)) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-sm" style={{ color: "rgba(140,230,180,0.6)", textShadow: "0 0 8px rgba(140,230,180,0.2)" }}>
+        <p className="text-[15px]" style={{ color: "rgba(140,230,180,0.6)", textShadow: "0 0 8px rgba(140,230,180,0.2)" }}>
           Paracelsus is preparing...
         </p>
       </div>
@@ -119,10 +148,10 @@ export default function ProfilePage() {
       <div className="flex flex-1 items-center justify-center">
         <div className="text-center space-y-3">
           <div className="text-accent text-2xl animate-pulse">&#x2234;</div>
-          <p className="text-sm" style={{ color: "rgba(140,230,180,0.8)", textShadow: "0 0 8px rgba(140,230,180,0.3)" }}>
+          <p className="text-[15px]" style={{ color: "rgba(140,230,180,0.8)", textShadow: "0 0 8px rgba(140,230,180,0.3)" }}>
             Payment processing...
           </p>
-          <p className="text-xs text-muted">This will take a moment.</p>
+          <p className="text-[13px] text-muted">This will take a moment.</p>
         </div>
       </div>
     );
@@ -170,16 +199,16 @@ export default function ProfilePage() {
               }}
               autoFocus
               maxLength={50}
-              className="bg-surface-light px-2 py-0.5 text-sm text-foreground focus:outline-none border border-accent/20 flex-1"
+              className="bg-surface-light px-2 py-0.5 text-[15px] text-foreground focus:outline-none border border-accent/20 flex-1"
             />
           ) : (
             <button
               onClick={() => { setDisplayName(displayName || nameToShow); setEditingName(true); }}
-              className={`text-sm transition-colors truncate flex items-center gap-1.5 ${nameSaved ? "text-green-400" : "text-foreground hover:text-accent"}`}
+              className={`text-[15px] transition-colors truncate flex items-center gap-1.5 ${nameSaved ? "text-green-400" : "text-foreground hover:text-accent"}`}
               title="Click to edit name"
             >
               {nameSaved ? "\u2713 Saved" : nameToShow}
-              {!nameSaved && <span className="text-muted text-[10px] shrink-0">&#x270E;</span>}
+              {!nameSaved && <span className="text-muted text-[13px] shrink-0">&#x270E;</span>}
             </button>
           )}
         </div>
@@ -189,7 +218,7 @@ export default function ProfilePage() {
       <div className="shrink-0 flex border-b border-white/10">
         <button
           onClick={() => setActiveTab("terminal")}
-          className={`flex-1 py-3 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
+          className={`flex-1 py-3 text-[13px] font-heading font-bold uppercase tracking-widest text-center transition-colors ${
             activeTab === "terminal" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"
           }`}
         >
@@ -197,7 +226,7 @@ export default function ProfilePage() {
         </button>
         <button
           onClick={() => setActiveTab("examination")}
-          className={`flex-1 py-3 text-xs font-heading font-bold uppercase tracking-widest text-center transition-colors ${
+          className={`flex-1 py-3 text-[13px] font-heading font-bold uppercase tracking-widest text-center transition-colors ${
             activeTab === "examination" ? "text-accent border-b-2 border-accent" : "text-muted hover:text-foreground"
           }`}
         >
@@ -205,8 +234,8 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* ── Tab content ── */}
-      {activeTab === "terminal" ? (
+      {/* ── Tab content — both rendered, inactive hidden to preserve state ── */}
+      <div className={activeTab === "terminal" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
         <SpiritChat
           accessToken={session.access_token}
           assessmentCompleted={assessmentCompleted}
@@ -220,28 +249,27 @@ export default function ProfilePage() {
           messages={chatMessages}
           setMessages={setChatMessages}
         />
-      ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4">
-          <div className="max-w-[800px] mx-auto space-y-5">
-            {assessmentCompleted ? (
-              <ExaminationResults
-                currentLifespan={currentLifespan}
-                baselineYears={baselineYears}
-                penaltyEntries={penaltyEntries}
-                penaltiesNormalized={penaltiesNormalized}
-                penaltyAdvice={penaltyAdvice}
-                committedFactors={committedFactors}
-              />
-            ) : (
-              <ExaminationEmptyState
-                examPurchased={examPurchased}
-                accessToken={session.access_token}
-                onStartExam={() => setActiveTab("terminal")}
-              />
-            )}
-          </div>
+      </div>
+      <div className={activeTab === "examination" ? "flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4" : "hidden"}>
+        <div className="max-w-[800px] mx-auto space-y-5">
+          {assessmentCompleted ? (
+            <ExaminationResults
+              currentLifespan={currentLifespan}
+              baselineYears={baselineYears}
+              penaltyEntries={penaltyEntries}
+              penaltiesNormalized={penaltiesNormalized}
+              penaltyAdvice={penaltyAdvice}
+              committedFactors={committedFactors}
+            />
+          ) : (
+            <ExaminationEmptyState
+              examPurchased={examPurchased}
+              accessToken={session.access_token}
+              onStartExam={() => setActiveTab("terminal")}
+            />
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -286,20 +314,20 @@ function ExaminationResults({
       {/* Projected lifespan card */}
       <div className="border p-4 sm:p-6 space-y-3" style={{ borderColor: "rgba(140,230,180,0.25)" }}>
         <div className="text-center space-y-2">
-          <p className="text-muted text-[10px] font-heading uppercase tracking-widest">Projected Lifespan</p>
+          <p className="text-muted text-[13px] font-heading uppercase" style={{ letterSpacing: "0.1em" }}>Projected Lifespan</p>
           <p
             className="font-heading font-black text-5xl sm:text-6xl"
             style={{ color: "rgba(140,230,180,0.9)", textShadow: "0 0 20px rgba(140,230,180,0.3)" }}
           >
             {currentLifespan.toFixed(1)}
           </p>
-          <p className="text-muted text-xs">years</p>
+          <p className="text-muted text-[13px]">years</p>
         </div>
 
         <LifespanBar years={currentLifespan} animate={true} />
 
         {baselineYears && (
-          <div className="flex justify-center gap-4 sm:gap-6 text-[11px] text-muted pt-1">
+          <div className="flex justify-center gap-4 sm:gap-6 text-[13px] text-muted pt-1" style={{ lineHeight: "16px" }}>
             <span>Initial: <span className="text-foreground">{baselineYears}</span></span>
             <span>Current: <span className="text-foreground">{currentLifespan.toFixed(1)}</span></span>
             <span>
@@ -313,7 +341,7 @@ function ExaminationResults({
 
       {/* All 17 factors — accordion list */}
       <div className="space-y-2 pt-2">
-        <h2 className="font-heading text-[11px] tracking-widest text-accent uppercase">
+        <h2 className="font-heading text-[13px] font-bold text-accent uppercase" style={{ letterSpacing: "0.08em" }}>
           Zolman Level 1 Protocol — 17 Factors
         </h2>
         <div className="space-y-1">
@@ -339,18 +367,18 @@ function ExaminationResults({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs ${factor.isRed ? "text-red-400" : "text-green-400"}`}>
+                        <span className={`text-[15px] ${factor.isRed ? "text-red-400" : "text-green-400"}`}>
                           {factor.isRed ? "\u25CB" : "\u2713"}
                         </span>
-                        <span className="text-sm text-foreground/80">{factor.name}</span>
+                        <span className="text-[15px] font-medium text-foreground/80">{factor.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {factor.isRed ? (
-                          <span className="text-sm text-red-400">-{factor.penalty.toFixed(1)}</span>
+                          <span className="text-[15px] font-bold text-red-400">-{factor.penalty.toFixed(1)}</span>
                         ) : (
-                          <span className="text-xs text-green-400/60">OK</span>
+                          <span className="text-[13px] text-green-400/60">OK</span>
                         )}
-                        <span className="text-muted text-[10px]">{isExpanded ? "\u25B2" : "\u25BC"}</span>
+                        <span className="text-muted text-[13px]">{isExpanded ? "\u25B2" : "\u25BC"}</span>
                       </div>
                     </div>
                   </div>
@@ -362,7 +390,7 @@ function ExaminationResults({
             );
           })}
         </div>
-        <p className="text-[10px] text-muted pt-1">
+        <p className="text-[13px] text-muted pt-1">
           {committedFactors.length} of {penaltyEntries.length} penalty factors addressed
         </p>
       </div>
@@ -375,12 +403,12 @@ function ExaminationResults({
 function FactorDetails({ factor }: { factor: { id: string; isRed: boolean; penalty: number; maxPenalty: number; advice?: string } }) {
   const detail = PROTOCOL_DETAILS[factor.id];
   const borderColor = factor.isRed ? "rgba(248,113,113,0.2)" : "rgba(74,222,128,0.2)";
-  const sectionTitle = "text-[10px] font-heading uppercase tracking-widest mb-1.5";
+  const sectionTitle = "text-[13px] font-heading uppercase tracking-wider mb-1.5";
 
   return (
     <div
-      className="px-3 py-3 ml-3 text-xs leading-relaxed space-y-3"
-      style={{ borderLeft: `1px solid ${borderColor}`, color: "rgba(160,240,190,0.7)" }}
+      className="px-3 py-3 ml-3 text-[15px] space-y-3"
+      style={{ borderLeft: `1px solid ${borderColor}`, color: "rgba(160,240,190,0.7)", lineHeight: "20px" }}
     >
       {/* Personalized advice from LLM (if red) */}
       {factor.isRed && factor.advice && (
@@ -473,7 +501,7 @@ function ExaminationEmptyState({
     try {
       const res = await fetch("/api/subscribe", { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } });
       const data = await res.json();
-      if (data.paymentUrl) { window.location.href = data.paymentUrl; }
+      if (data.paymentUrl) { window.open(data.paymentUrl, "_blank"); setSubscribing(false); }
       else { alert(data.error || "Could not start checkout."); setSubscribing(false); }
     } catch { alert("Payment service unavailable."); setSubscribing(false); }
   }
@@ -488,12 +516,12 @@ function ExaminationEmptyState({
           className="w-16 h-16 rounded-sm object-cover opacity-60"
           style={{ border: "1px solid rgba(140,230,180,0.2)" }}
         />
-        <p className="text-sm text-center leading-6 max-w-xs" style={{ color: "rgba(140,230,180,0.7)" }}>
+        <p className="text-[15px] text-center max-w-xs" style={{ color: "rgba(140,230,180,0.7)", lineHeight: "20px" }}>
           Your examination is ready. Paracelsus will assess all 17 factors of Dr. Zolman&apos;s Level 1 Longevity Protocol.
         </p>
         <button
           onClick={onStartExam}
-          className="bg-accent px-6 py-2 text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90"
+          className="bg-accent px-6 py-2 text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90"
         >
           Begin Examination
         </button>
@@ -512,12 +540,12 @@ function ExaminationEmptyState({
       />
       <div className="text-center space-y-2 max-w-sm">
         <h3
-          className="font-heading text-sm tracking-widest uppercase"
+          className="font-heading text-[15px] font-bold tracking-widest uppercase"
           style={{ color: "rgba(140,230,180,0.8)" }}
         >
           Level 1 Longevity Examination
         </h3>
-        <p className="text-muted text-xs leading-relaxed">
+        <p className="text-muted text-[15px]" style={{ lineHeight: "20px" }}>
           Discover your projected lifespan based on Dr. Oliver Zolman&apos;s protocol.
           17 factors. Evidence-based. Your number in 10 minutes.
         </p>
@@ -525,11 +553,11 @@ function ExaminationEmptyState({
       <button
         onClick={handlePurchase}
         disabled={subscribing}
-        className="bg-accent px-8 py-3 text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50"
+        className="bg-accent px-8 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50"
       >
         {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
       </button>
-      <p className="text-[10px] text-muted">One-time payment. Results are permanent.</p>
+      <p className="text-[13px] text-muted">One-time payment. Results are permanent.</p>
     </div>
   );
 }
