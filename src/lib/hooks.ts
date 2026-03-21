@@ -104,5 +104,15 @@ export function useSubscription(userId: string | undefined) {
       });
   }, [userId]);
 
-  return { sub, loading };
+  const refresh = async () => {
+    if (!userId) return;
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    setSub(data);
+  };
+
+  return { sub, loading, refresh };
 }

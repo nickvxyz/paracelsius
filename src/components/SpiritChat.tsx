@@ -22,6 +22,7 @@ export interface ChatMessage {
 interface SpiritChatProps {
   accessToken: string;
   assessmentCompleted: boolean;
+  examPurchased: boolean;
   lifespanYears: number;
   onLifespanUpdate: (years: number) => void;
   onAssessmentComplete: (result: AgentCommand) => void;
@@ -39,6 +40,7 @@ interface SpiritChatProps {
 export default function SpiritChat({
   accessToken,
   assessmentCompleted,
+  examPurchased,
   lifespanYears,
   onLifespanUpdate,
   onAssessmentComplete,
@@ -64,6 +66,8 @@ export default function SpiritChat({
 
   const isPaid = subscriptionStatus === "active";
   const remaining = isPaid ? null : Math.max(0, freeMessagesLimit - localUsed);
+  // Show CTA banner only if exam not purchased AND not already paid subscriber
+  const showCtaBanner = !examPurchased && !isPaid;
 
   // ── Keyboard detection via visualViewport ──
   useEffect(() => {
@@ -107,7 +111,7 @@ export default function SpiritChat({
       if (res.status === 402) {
         const err = await res.json();
         setDailyLimitHit(err.error === "daily_limit");
-        setMessages((prev) => [...prev, { role: "assistant", content: "You have used your free messages for today. Subscribe or return tomorrow." }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: "You have used your free messages for today. Return tomorrow for 30 more." }]);
         setIsStreaming(false);
         return;
       }
@@ -174,7 +178,6 @@ export default function SpiritChat({
     } finally {
       setIsStreaming(false);
       inputRef.current?.focus();
-      // Delayed refresh — gives server time to process commands and write to DB
       setTimeout(() => { onLifespanUpdate(lifespanYears); }, 2000);
     }
   }
@@ -190,15 +193,22 @@ export default function SpiritChat({
   }
 
   const borderColor = "rgba(140,230,180,0.25)";
-  const inputBarH = 95; // textarea form + counter
+  const inputBarH = 95;
 
-  /*
-   * Layout: the parent provides full height via flex.
-   * Messages area fills everything, with padding-bottom for the fixed input bar.
-   * Input bar is position:fixed, adjusted by kbOffset when keyboard opens.
-   */
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full relative">
+      {/* ── CTA Banner (pinned at top, below tab bar) ── */}
+      {showCtaBanner && (
+        <button
+          onClick={handleSubscribe}
+          disabled={subscribing}
+          className="shrink-0 w-full py-2.5 px-4 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity"
+          style={{ backgroundColor: "#ff6b1a" }}
+        >
+          {subscribing ? "Redirecting..." : "Examine Now \u2014 $17 | Discover your projected lifespan"}
+        </button>
+      )}
+
       {/* ── Messages (scrollable) ── */}
       <div
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-3"
@@ -206,9 +216,17 @@ export default function SpiritChat({
       >
         {messages.length === 0 && !isStreaming && (
           <div className="text-center pt-4 space-y-2" style={{ color: "rgba(140,230,180,0.5)", textShadow: "0 0 6px rgba(140,230,180,0.15)" }}>
-            <p className="text-sm">Start your longevity examination.</p>
+            <p className="text-sm">
+              {examPurchased
+                ? "Your examination is ready. Say anything to begin."
+                : "Speak with Paracelsus about your longevity."
+              }
+            </p>
             <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
-              Paracelsus will assess 17 lifestyle factors from Dr. Zolman&apos;s protocol and calculate your projected lifespan.
+              {examPurchased
+                ? "Paracelsus will assess 17 lifestyle factors from Dr. Zolman\u2019s protocol and calculate your projected lifespan."
+                : "Ask about the Level 1 Longevity Protocol, your lifestyle, or what factors determine how long you will live."
+              }
             </p>
           </div>
         )}
@@ -299,12 +317,14 @@ export default function SpiritChat({
             <div className="text-center space-y-2">
               <div className="text-accent text-2xl">&#x2620;</div>
               <h3 className="font-heading text-sm tracking-widest text-accent uppercase">Free Messages Used</h3>
-              <p className="text-muted text-xs">You have used all 10 free messages for today.</p>
+              <p className="text-muted text-xs">You have used all 30 free messages for today.</p>
             </div>
-            <button onClick={handleSubscribe} disabled={subscribing} className="block w-full bg-accent py-3 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50">
-              {subscribing ? "Redirecting..." : "Subscribe \u2014 $30/month"}
-            </button>
-            <p className="text-center text-xs text-muted">Or return tomorrow for 10 more free messages</p>
+            {!examPurchased && (
+              <button onClick={handleSubscribe} disabled={subscribing} className="block w-full bg-accent py-3 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50">
+                {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
+              </button>
+            )}
+            <p className="text-center text-xs text-muted">Return tomorrow for 30 more free messages</p>
           </div>
         </div>
       )}
@@ -324,7 +344,6 @@ export default function SpiritChat({
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
-                // Auto-grow
                 e.target.style.height = "auto";
                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
               }}

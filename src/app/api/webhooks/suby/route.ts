@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        const { error } = await supabase
+        // Update subscriptions table
+        const { error: subError } = await supabase
           .from("subscriptions")
           .update({
             status: "active",
@@ -72,13 +73,23 @@ export async function POST(req: NextRequest) {
           })
           .eq("user_id", userId);
 
-        if (error) {
-          console.error("[suby-webhook] Supabase update failed:", error);
-          // Return 500 so Suby.fi retries
+        if (subError) {
+          console.error("[suby-webhook] Subscriptions update failed:", subError);
           return Response.json({ error: "DB update failed" }, { status: 500 });
         }
 
-        console.log(`[suby-webhook] Subscription activated for user ${userId}`);
+        // Set exam_purchased on patient_profiles
+        const { error: profileError } = await supabase
+          .from("patient_profiles")
+          .update({ exam_purchased: true })
+          .eq("user_id", userId);
+
+        if (profileError) {
+          console.error("[suby-webhook] Profile update failed:", profileError);
+          return Response.json({ error: "DB update failed" }, { status: 500 });
+        }
+
+        console.log(`[suby-webhook] Exam purchased activated for user ${userId}`);
       } catch (err) {
         console.error("[suby-webhook] Unexpected error:", err);
         return Response.json({ error: "Internal error" }, { status: 500 });
@@ -88,8 +99,6 @@ export async function POST(req: NextRequest) {
 
     case "PAYMENT_FAILED": {
       console.warn(`[suby-webhook] Payment failed for user ${userId}, payment ${payment?.id}`);
-      // Keep subscription as-is (don't downgrade on failed renewal attempt)
-      // The subscription status will be checked via Suby.fi API if needed
       break;
     }
 

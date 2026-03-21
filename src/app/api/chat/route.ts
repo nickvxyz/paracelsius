@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase";
 import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const FREE_DAILY_LIMIT = 10;
+const FREE_DAILY_LIMIT = 30;
 
 function getTodayKey(): string {
   return new Date().toISOString().split("T")[0];
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   if (!existingProfile) {
     await supabase.from("patient_profiles").insert({
-      user_id: user.id, lifespan_years: 94, assessment_completed: false,
+      user_id: user.id, lifespan_years: 94, assessment_completed: false, exam_purchased: false,
       penalties: {}, penalty_advice: {},
       conversation_state: { phase: "intro", categories_covered: [], committed_factors: [], declined_factors: [], current_coaching_factor: null, session_count: 0 },
     });
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
   let { data: sub } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).single();
   if (!sub) {
     const { data: newSub } = await supabase.from("subscriptions").insert({
-      user_id: user.id, status: "free", free_messages_used: 0, free_messages_limit: 10, free_messages_date: getTodayKey(),
+      user_id: user.id, status: "free", free_messages_used: 0, free_messages_limit: FREE_DAILY_LIMIT, free_messages_date: getTodayKey(),
     }).select().single();
     sub = newSub;
   }
@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: patientProfile } = await supabase.from("patient_profiles").select("*").eq("user_id", user.id).single();
+  const examPurchased = patientProfile?.exam_purchased ?? false;
 
   const { data: recentMessages } = await supabase
     .from("messages").select("role, content").eq("user_id", user.id)
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
     })) || [];
 
   const isAssessment = !patientProfile?.assessment_completed;
-  const systemPrompt = buildSystemPrompt(patientProfile as PatientProfile | null, isAssessment, isPaid);
+  const systemPrompt = buildSystemPrompt(patientProfile as PatientProfile | null, isAssessment, examPurchased);
 
   const stream = streamLLMResponse(systemPrompt, conversationHistory, message.trim(), async (fullResponse) => {
     await supabase.from("messages").insert({

@@ -20,6 +20,17 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Invalid token" }, { status: 401 });
   }
 
+  // ── Double-pay protection: check if already purchased ──
+  const { data: profile } = await supabase
+    .from("patient_profiles")
+    .select("exam_purchased")
+    .eq("user_id", user.id)
+    .single();
+
+  if (profile?.exam_purchased) {
+    return Response.json({ error: "Examination already purchased" }, { status: 409 });
+  }
+
   // ── Create Suby.fi payment session ──
   const apiKey = process.env.SUBY_API_KEY;
   const productId = process.env.SUBY_PRODUCT_ID;
@@ -44,8 +55,8 @@ export async function POST(req: NextRequest) {
         productId,
         customerEmail: user.email,
         externalRef: user.id,
-        metadata: { source: "paracelsus", userId: user.id },
-        successUrl: `${origin}/profile?subscribed=true`,
+        metadata: { source: "paracelsus", userId: user.id, product: "l1_examination" },
+        successUrl: `${origin}/profile?exam_purchased=true`,
         cancelUrl: `${origin}/profile`,
       }),
     });
