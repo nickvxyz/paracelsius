@@ -218,7 +218,7 @@ export default function SpiritChat({
             <div key={i}>
               {msg.role === "user" ? (
                 <div className="text-left">
-                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-sm text-foreground/90 break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere" }}>
+                  <span className="inline-block max-w-[85%] bg-accent/15 px-3 py-2 text-base text-foreground/90 break-words whitespace-pre-wrap" style={{ overflowWrap: "anywhere" }}>
                     {msg.content}
                   </span>
                 </div>
@@ -232,7 +232,7 @@ export default function SpiritChat({
                   />
                   <div className="min-w-0 flex-1">
                     <div
-                      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                      className="text-base leading-relaxed whitespace-pre-wrap break-words"
                       style={{
                         color: "rgba(160,240,190,0.9)",
                         textShadow: "0 0 8px rgba(140,230,180,0.3), 0 0 20px rgba(120,200,160,0.12)",
