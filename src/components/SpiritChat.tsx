@@ -86,13 +86,13 @@ export default function SpiritChat({
   }, []);
   useEffect(() => { scrollToBottom(); }, [messages, isStreaming, scrollToBottom]);
 
-  // ── Send message ──
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = input.trim();
-    if (!trimmed || isStreaming || dailyLimitHit) return;
+  // ── Send message (core logic, callable programmatically) ──
+  const sendMessageRef = useRef(false);
 
-    setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
+  async function sendMessage(text: string) {
+    if (!text || isStreaming || dailyLimitHit) return;
+
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setIsStreaming(true);
     if (!examPurchased) setLocalUsed((prev) => prev + 1);
@@ -101,7 +101,7 @@ export default function SpiritChat({
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: text }),
       });
 
       if (res.status === 402) {
@@ -178,6 +178,21 @@ export default function SpiritChat({
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    await sendMessage(trimmed);
+  }
+
+  // ── Auto-start exam for paid users with empty chat ──
+  useEffect(() => {
+    if (examPurchased && !assessmentCompleted && messages.length === 0 && !isStreaming && !sendMessageRef.current) {
+      sendMessageRef.current = true;
+      sendMessage("Begin my examination");
+    }
+  }, [examPurchased, assessmentCompleted, messages.length, isStreaming]);
+
   async function handleSubscribe() {
     setSubscribing(true);
     try {
@@ -195,11 +210,11 @@ export default function SpiritChat({
     <div className="flex flex-col flex-1 min-h-0 w-full relative">
       {/* ── CTA Banner (pinned at top, below tab bar) ── */}
       {showCtaBanner && (
-        <div className="shrink-0 px-3 sm:px-4 pt-3 pb-1">
+        <div className="shrink-0 flex justify-center px-3 sm:px-4 pt-3 pb-1">
           <button
             onClick={handleSubscribe}
             disabled={subscribing}
-            className="w-full py-3 px-4 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity border border-orange-400/30"
+            className="py-3 px-8 text-center text-xs font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity border border-orange-400/30"
             style={{ backgroundColor: "#ff6b1a", boxShadow: "0 0 15px rgba(255,107,26,0.25)" }}
           >
             {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
