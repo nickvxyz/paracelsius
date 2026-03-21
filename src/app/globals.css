@@ -22,10 +22,53 @@
   --font-body: var(--font-space-mono);
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
+  height: 100%;
+  overflow: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), monospace;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent iOS auto-zoom on input focus — inputs must be >= 16px */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* Spirit thinking — portrait glow pulse while agent is processing */
+@keyframes spirit-glow {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(140,230,180,0.2), 0 0 8px rgba(140,230,180,0.1);
+    opacity: 0.7;
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(140,230,180,0.5), 0 0 24px rgba(140,230,180,0.2);
+    opacity: 1;
+  }
+}
+.spirit-thinking {
+  animation: spirit-glow 1.5s ease-in-out infinite;
+}
+
+/* Placeholder styled like spirit text — shadowed, muted */
+textarea::placeholder {
+  color: rgba(140,230,180,0.35);
+  text-shadow: 0 0 6px rgba(140,230,180,0.1);
+}
+
+/* Auth overlay fade-in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
 }
 
 /* Ember glow pulse animation */
