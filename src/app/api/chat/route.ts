@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       await supabase.from("subscriptions").update({ free_messages_used: 0, free_messages_date: today }).eq("user_id", user.id);
       sub.free_messages_used = 0;
     }
-    const messageLimit = sub.free_messages_limit || FREE_DAILY_LIMIT;
+    const messageLimit = FREE_DAILY_LIMIT;
     if (sub.free_messages_used >= messageLimit) {
       return Response.json({ error: "daily_limit", message: "You have used all free messages for today.", remaining: 0, resets_at: "midnight" }, { status: 402 });
     }
