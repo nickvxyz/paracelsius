@@ -168,16 +168,18 @@ export default function StreamPage() {
         <p className="text-[10px] text-muted tracking-widest uppercase mt-1 font-heading">
           Live Stream
         </p>
-        <h2
-          className="font-heading text-xl sm:text-2xl font-black tracking-wider uppercase mt-4"
-          style={{ color: "rgba(140,230,180,0.9)", textShadow: "0 0 20px rgba(140,230,180,0.3)" }}
-        >
-          Agent Token Launch
-        </h2>
       </div>
 
       {/* Center: Countdown + animated text */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 sm:gap-12 min-h-0 w-full max-w-lg">
+        {/* Main heading */}
+        <h2
+          className="font-heading text-3xl sm:text-5xl font-black tracking-wider uppercase text-center"
+          style={{ color: "#ff6b1a", textShadow: "0 0 30px rgba(255,107,26,0.35), 0 0 60px rgba(255,107,26,0.15)" }}
+        >
+          Agent Token Launch
+        </h2>
+
         {/* Countdown */}
         <div className="text-center">
           {countdown.done ? (
