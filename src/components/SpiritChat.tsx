@@ -278,11 +278,15 @@ export default function SpiritChat({
           ))}
 
           {isStreaming && messages[messages.length - 1]?.content === "" && (
-            <span className="inline-flex gap-1 px-1 py-2">
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-              <span className="typing-dot w-2 h-2 rounded-full bg-accent" />
-            </span>
+            <div className="flex gap-2 items-start">
+              <img
+                src="/paracelsus-portrait.png"
+                alt="Paracelsus is thinking"
+                className="w-7 h-7 rounded-sm shrink-0 object-cover spirit-thinking"
+                style={{ border: "1px solid rgba(140,230,180,0.3)" }}
+              />
+              <span className="text-xs mt-2" style={{ color: "rgba(140,230,180,0.4)" }}>...</span>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
