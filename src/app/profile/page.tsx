@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, usePatientProfile, useSubscription } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import { ZOLMAN_CATEGORIES } from "@/lib/zolman-categories";
+import { PROTOCOL_DETAILS } from "@/lib/protocol-details";
 import LifespanBar from "@/components/LifespanBar";
 import SpiritChat, { type ChatMessage } from "@/components/SpiritChat";
 import TermsConsent from "@/components/TermsConsent";
@@ -355,30 +356,7 @@ function ExaminationResults({
                   </div>
                 </button>
                 {isExpanded && (
-                  <div
-                    className="px-3 py-3 ml-3 text-xs leading-relaxed space-y-2"
-                    style={{
-                      borderLeft: `1px solid ${factor.isRed ? "rgba(248,113,113,0.2)" : "rgba(74,222,128,0.2)"}`,
-                      color: "rgba(160,240,190,0.7)",
-                    }}
-                  >
-                    {factor.isRed ? (
-                      <>
-                        {factor.advice && <p>{factor.advice}</p>}
-                        <p className="text-red-400/70">
-                          Costing you up to {factor.penalty.toFixed(1)} years. Max possible: {factor.maxPenalty} years.
-                        </p>
-                        <p className="text-muted">Address this factor to recover lost years.</p>
-                      </>
-                    ) : (
-                      <>
-                        <p>This factor is working in your favor. No immediate action needed.</p>
-                        <p className="text-muted">
-                          Continue your current habits. Max penalty if neglected: {factor.maxPenalty} years.
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  <FactorDetails factor={factor} />
                 )}
               </div>
             );
@@ -389,6 +367,91 @@ function ExaminationResults({
         </p>
       </div>
     </>
+  );
+}
+
+// ── Factor Details (accordion content) ──────────────────────
+
+function FactorDetails({ factor }: { factor: { id: string; isRed: boolean; penalty: number; maxPenalty: number; advice?: string } }) {
+  const detail = PROTOCOL_DETAILS[factor.id];
+  const borderColor = factor.isRed ? "rgba(248,113,113,0.2)" : "rgba(74,222,128,0.2)";
+  const sectionTitle = "text-[10px] font-heading uppercase tracking-widest mb-1.5";
+
+  return (
+    <div
+      className="px-3 py-3 ml-3 text-xs leading-relaxed space-y-3"
+      style={{ borderLeft: `1px solid ${borderColor}`, color: "rgba(160,240,190,0.7)" }}
+    >
+      {/* Personalized advice from LLM (if red) */}
+      {factor.isRed && factor.advice && (
+        <p className="text-red-400/80">{factor.advice}</p>
+      )}
+      {factor.isRed && (
+        <p className="text-red-400/60">
+          Costing you {factor.penalty.toFixed(1)} of {factor.maxPenalty} possible years.
+        </p>
+      )}
+      {!factor.isRed && (
+        <p className="text-green-400/60">
+          On track. Max penalty if neglected: {factor.maxPenalty} years.
+        </p>
+      )}
+
+      {/* Protocol details */}
+      {detail && (
+        <>
+          <p className="text-muted">{detail.summary}</p>
+
+          {detail.mechanisms.length > 0 && (
+            <div>
+              <p className={`${sectionTitle} text-muted`}>Mechanisms</p>
+              <ul className="space-y-0.5">
+                {detail.mechanisms.map((m, i) => (
+                  <li key={i} className="text-foreground/50">{m}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detail.targets && detail.targets.length > 0 && (
+            <div>
+              <p className={`${sectionTitle} text-accent/70`}>Targets</p>
+              <ul className="space-y-0.5">
+                {detail.targets.map((t, i) => (
+                  <li key={i} className="text-foreground/60">{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detail.interventions && detail.interventions.length > 0 && (
+            <div>
+              <p className={`${sectionTitle} text-muted`}>What to do</p>
+              <ul className="space-y-0.5">
+                {detail.interventions.map((v, i) => (
+                  <li key={i} className="text-foreground/50">{v}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detail.timeline && detail.timeline.length > 0 && (
+            <div>
+              <p className={`${sectionTitle} text-muted`}>Recovery timeline</p>
+              <ul className="space-y-0.5">
+                {detail.timeline.map((t, i) => (
+                  <li key={i} className="text-foreground/50">{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {detail.insight && (
+            <p className="text-accent/60 italic">{detail.insight}</p>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
