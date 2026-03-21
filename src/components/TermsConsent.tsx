@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface TermsConsentProps {
   userId: string;
@@ -13,6 +14,9 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
   const [tosChecked, setTosChecked] = useState(false);
   const [emailChecked, setEmailChecked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   async function handleAgree() {
     if (!tosChecked) return;
@@ -40,8 +44,10 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
     onAccepted();
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-4">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-4">
       <div className="w-full max-w-md bg-surface border border-white/10 p-6 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-lg font-bold tracking-wider text-accent">
@@ -113,6 +119,7 @@ export default function TermsConsent({ accessToken, onAccepted, onDeclined }: Te
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
