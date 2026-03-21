@@ -210,7 +210,7 @@ export default function SpiritChat({
     <div className="flex flex-col flex-1 min-h-0 w-full relative">
       {/* ── CTA Banner (pinned at top, below tab bar) ── */}
       {showCtaBanner && (
-        <div className="shrink-0 flex justify-center px-3 sm:px-4 pt-3 pb-1">
+        <div className="shrink-0 flex justify-center px-3 sm:px-4 pt-5 pb-1">
           <button
             onClick={handleSubscribe}
             disabled={subscribing}
