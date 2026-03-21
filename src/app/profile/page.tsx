@@ -248,13 +248,9 @@ export default function ProfilePage() {
         <SpiritChat
           accessToken={session.access_token}
           assessmentCompleted={assessmentCompleted}
-          examPurchased={examPurchased}
           lifespanYears={currentLifespan}
           onLifespanUpdate={handleLifespanUpdate}
           onAssessmentComplete={handleAssessmentComplete}
-          onPaywall={() => {}}
-          freeMessagesUsed={(sub?.free_messages_used as number) ?? 0}
-          freeMessagesLimit={30}
           messages={chatMessages}
           setMessages={setChatMessages}
         />
@@ -272,8 +268,6 @@ export default function ProfilePage() {
             />
           ) : (
             <ExaminationEmptyState
-              examPurchased={examPurchased}
-              accessToken={session.access_token}
               onStartExam={() => setActiveTab("terminal")}
             />
           )}
@@ -495,56 +489,16 @@ function FactorDetails({ factor }: { factor: { id: string; isRed: boolean; penal
 // ── Examination Empty State (pre-assessment) ──────────────────
 
 function ExaminationEmptyState({
-  examPurchased,
-  accessToken,
   onStartExam,
 }: {
-  examPurchased: boolean;
-  accessToken: string;
   onStartExam: () => void;
 }) {
-  const [subscribing, setSubscribing] = useState(false);
-
-  async function handlePurchase() {
-    setSubscribing(true);
-    try {
-      const res = await fetch("/api/subscribe", { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } });
-      const data = await res.json();
-      if (data.paymentUrl) { window.open(data.paymentUrl, "_blank"); setSubscribing(false); }
-      else { alert(data.error || "Could not start checkout."); setSubscribing(false); }
-    } catch { alert("Payment service unavailable."); setSubscribing(false); }
-  }
-
-  if (examPurchased) {
-    // Exam purchased but not yet completed — direct to terminal
-    return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4">
-        <img
-          src="/paracelsus-portrait.png"
-          alt="Paracelsus"
-          className="w-16 h-16 rounded-sm object-cover opacity-60"
-          style={{ border: "1px solid rgba(140,230,180,0.2)" }}
-        />
-        <p className="text-[15px] text-center max-w-xs" style={{ color: "rgba(140,230,180,0.7)", lineHeight: "20px" }}>
-          Your examination is ready. Paracelsus will assess all 17 factors of Dr. Zolman&apos;s Level 1 Longevity Protocol.
-        </p>
-        <button
-          onClick={onStartExam}
-          className="bg-accent px-6 py-2 text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90"
-        >
-          Begin Examination
-        </button>
-      </div>
-    );
-  }
-
-  // Not purchased — show CTA
   return (
-    <div className="flex flex-col items-center justify-center py-16 space-y-5">
+    <div className="flex flex-col items-center justify-center py-16 space-y-4">
       <img
         src="/paracelsus-portrait.png"
         alt="Paracelsus"
-        className="w-20 h-20 rounded-sm object-cover opacity-70"
+        className="w-16 h-16 rounded-sm object-cover opacity-60"
         style={{ border: "1px solid rgba(140,230,180,0.2)" }}
       />
       <div className="text-center space-y-2 max-w-sm">
@@ -554,19 +508,16 @@ function ExaminationEmptyState({
         >
           Level 1 Longevity Examination
         </h3>
-        <p className="text-muted text-[15px]" style={{ lineHeight: "20px" }}>
-          Discover your projected lifespan based on Dr. Oliver Zolman&apos;s protocol.
-          17 factors. Evidence-based. Your number in 10 minutes.
+        <p className="text-[15px] text-center max-w-xs" style={{ color: "rgba(140,230,180,0.7)", lineHeight: "20px" }}>
+          Paracelsus will assess all 17 factors of Dr. Zolman&apos;s Level 1 Longevity Protocol and calculate your projected lifespan.
         </p>
       </div>
       <button
-        onClick={handlePurchase}
-        disabled={subscribing}
-        className="bg-accent px-8 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50"
+        onClick={onStartExam}
+        className="bg-accent px-8 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90"
       >
-        {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
+        Begin Examination
       </button>
-      <p className="text-[13px] text-muted">One-time payment. Results are permanent.</p>
     </div>
   );
 }

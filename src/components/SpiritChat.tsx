@@ -22,13 +22,9 @@ export interface ChatMessage {
 interface SpiritChatProps {
   accessToken: string;
   assessmentCompleted: boolean;
-  examPurchased: boolean;
   lifespanYears: number;
   onLifespanUpdate: (years: number) => void;
   onAssessmentComplete: (result: AgentCommand) => void;
-  onPaywall: () => void;
-  freeMessagesUsed: number;
-  freeMessagesLimit: number;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
@@ -39,31 +35,18 @@ interface SpiritChatProps {
 export default function SpiritChat({
   accessToken,
   assessmentCompleted,
-  examPurchased,
   lifespanYears,
   onLifespanUpdate,
   onAssessmentComplete,
-  onPaywall,
-  freeMessagesUsed,
-  freeMessagesLimit,
   messages,
   setMessages,
 }: SpiritChatProps) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
-  const [dailyLimitHit, setDailyLimitHit] = useState(false);
   const [kbOffset, setKbOffset] = useState(0);
-  const [localUsed, setLocalUsed] = useState(freeMessagesUsed);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const portraitRef = usePortrait();
-
-  // Sync when prop changes (e.g. page refresh)
-  useEffect(() => { setLocalUsed(freeMessagesUsed); }, [freeMessagesUsed]);
-
-  const remaining = examPurchased ? null : Math.max(0, freeMessagesLimit - localUsed);
-  const showCtaBanner = !examPurchased;
 
   // ── Keyboard detection via visualViewport ──
   useEffect(() => {
@@ -86,16 +69,15 @@ export default function SpiritChat({
   }, []);
   useEffect(() => { scrollToBottom(); }, [messages, isStreaming, scrollToBottom]);
 
-  // ── Send message (core logic, callable programmatically) ──
+  // ── Send message ──
   const sendMessageRef = useRef(false);
 
   async function sendMessage(text: string) {
-    if (!text || isStreaming || dailyLimitHit) return;
+    if (!text || isStreaming) return;
 
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setIsStreaming(true);
-    if (!examPurchased) setLocalUsed((prev) => prev + 1);
 
     try {
       const res = await fetch("/api/chat", {
@@ -103,14 +85,6 @@ export default function SpiritChat({
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({ message: text }),
       });
-
-      if (res.status === 402) {
-        const err = await res.json();
-        setDailyLimitHit(err.error === "daily_limit");
-        setMessages((prev) => [...prev, { role: "assistant", content: "You have used your free messages for today. Return tomorrow for 30 more." }]);
-        setIsStreaming(false);
-        return;
-      }
 
       if (!res.ok) {
         const err = await res.json();
@@ -184,43 +158,19 @@ export default function SpiritChat({
     await sendMessage(trimmed);
   }
 
-  // ── Auto-start exam for paid users with empty chat ──
+  // ── Auto-start exam if not yet completed and empty chat ──
   useEffect(() => {
-    if (examPurchased && !assessmentCompleted && messages.length === 0 && !isStreaming && !sendMessageRef.current) {
+    if (!assessmentCompleted && messages.length === 0 && !isStreaming && !sendMessageRef.current) {
       sendMessageRef.current = true;
       sendMessage("Begin my examination");
     }
-  }, [examPurchased, assessmentCompleted, messages.length, isStreaming]);
-
-  async function handleSubscribe() {
-    setSubscribing(true);
-    try {
-      const res = await fetch("/api/subscribe", { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } });
-      const data = await res.json();
-      if (data.paymentUrl) { window.open(data.paymentUrl, "_blank"); setSubscribing(false); }
-      else { alert(data.error || "Could not start checkout."); setSubscribing(false); }
-    } catch { alert("Payment service unavailable."); setSubscribing(false); }
-  }
+  }, [assessmentCompleted, messages.length, isStreaming]);
 
   const borderColor = "rgba(140,230,180,0.25)";
-  const inputBarH = 95;
+  const inputBarH = 60;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full relative">
-      {/* ── CTA Banner (pinned at top, below tab bar) ── */}
-      {showCtaBanner && (
-        <div className="shrink-0 flex justify-center px-3 sm:px-4 pt-7 pb-1">
-          <button
-            onClick={handleSubscribe}
-            disabled={subscribing}
-            className="py-3 px-8 text-center text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50 transition-opacity outline-none"
-            style={{ backgroundColor: "#ff6b1a", boxShadow: "0 0 15px rgba(255,107,26,0.25)" }}
-          >
-            {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
-          </button>
-        </div>
-      )}
-
       {/* ── Messages (scrollable) ── */}
       <div
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-3"
@@ -238,13 +188,10 @@ export default function SpiritChat({
               className="font-heading text-[15px] font-bold tracking-widest uppercase"
               style={{ color: "rgba(140,230,180,0.8)" }}
             >
-              {examPurchased ? "Begin Your Examination" : "Longevity Terminal"}
+              Longevity Terminal
             </h3>
             <p className="text-[15px] text-muted max-w-xs mx-auto" style={{ lineHeight: "20px" }}>
-              {examPurchased
-                ? "Paracelsus will assess 17 lifestyle factors from Dr. Zolman\u2019s protocol and calculate your projected lifespan."
-                : "Ask about the Level 1 Longevity Protocol, your lifestyle, or what factors determine how long you will live."
-              }
+              Ask about the Level 1 Longevity Protocol, your lifestyle, or what factors determine how long you will live.
             </p>
           </div>
         )}
@@ -329,25 +276,6 @@ export default function SpiritChat({
         </div>
       </div>
 
-      {/* ── Paywall overlay ── */}
-      {dailyLimitHit && (
-        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/70">
-          <div className="border bg-surface p-6 space-y-4 max-w-sm mx-4" style={{ borderColor }} role="alertdialog">
-            <div className="text-center space-y-2">
-              <div className="text-accent text-2xl">&#x2620;</div>
-              <h3 className="font-heading text-[15px] font-bold tracking-widest text-accent uppercase">Free Messages Used</h3>
-              <p className="text-muted text-[13px]">You have used all 30 free messages for today.</p>
-            </div>
-            {!examPurchased && (
-              <button onClick={handleSubscribe} disabled={subscribing} className="block w-full bg-accent py-3 text-center text-[13px] font-heading font-bold uppercase tracking-wider text-background hover:opacity-90 disabled:opacity-50">
-                {subscribing ? "Redirecting..." : "Examine Now \u2014 $17"}
-              </button>
-            )}
-            <p className="text-center text-[13px] text-muted">Return tomorrow for 30 more free messages</p>
-          </div>
-        </div>
-      )}
-
       {/* ── Fixed input bar — moves above keyboard ── */}
       <div
         className="fixed left-0 right-0 z-50 px-2 sm:px-0"
@@ -373,7 +301,7 @@ export default function SpiritChat({
                 }
               }}
               placeholder="Speak to Paracelsus..."
-              disabled={isStreaming || dailyLimitHit}
+              disabled={isStreaming}
               aria-label="Message Paracelsus"
               rows={2}
               className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[15px] text-foreground focus:outline-none disabled:opacity-50 resize-none"
@@ -383,30 +311,13 @@ export default function SpiritChat({
             />
             <button
               type="submit"
-              disabled={isStreaming || dailyLimitHit || !input.trim()}
+              disabled={isStreaming || !input.trim()}
               className="shrink-0 px-4 py-4 text-[13px] font-heading font-bold uppercase tracking-wider text-accent hover:opacity-90 disabled:opacity-30"
             >
               Send
             </button>
           </form>
         </div>
-        {/* Free messages counter */}
-        {remaining !== null && !dailyLimitHit && (
-          <div className="max-w-[800px] mx-auto px-3 py-1 bg-background">
-            <div className="flex items-center gap-2 text-[13px] text-muted">
-              <span className="shrink-0">{localUsed}/{freeMessagesLimit} free messages</span>
-              <div className="flex-1 h-[2px] bg-white/5 overflow-hidden">
-                <div
-                  className="h-full bg-accent/50 transition-all"
-                  style={{ width: `${(localUsed / freeMessagesLimit) * 100}%` }}
-                />
-              </div>
-              <span className="shrink-0 text-muted">
-                {Math.round((localUsed / freeMessagesLimit) * 100)}%
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

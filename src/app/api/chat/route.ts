@@ -4,12 +4,6 @@ import { createServiceClient } from "@/lib/supabase";
 import { buildSystemPrompt, PatientProfile } from "@/lib/system-prompt";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const FREE_DAILY_LIMIT = 30;
-
-function getTodayKey(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
 function streamLLMResponse(
   systemPrompt: string,
   conversationHistory: Array<{ role: string; parts: Array<{ text: string }> }>,
@@ -91,33 +85,6 @@ export async function POST(req: NextRequest) {
   }, { onConflict: "user_id", ignoreDuplicates: true });
 
   const { data: patientProfile } = await supabase.from("patient_profiles").select("*").eq("user_id", user.id).single();
-  const examPurchased = patientProfile?.exam_purchased ?? false;
-
-  // Free message limiting — only for users who haven't purchased the exam
-  // Upsert subscription — safe against concurrent first-message race
-  await supabase.from("subscriptions").upsert({
-    user_id: user.id, status: "free", free_messages_used: 0, free_messages_limit: FREE_DAILY_LIMIT, free_messages_date: getTodayKey(),
-  }, { onConflict: "user_id", ignoreDuplicates: true });
-  const { data: sub } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).single();
-  if (!sub) return Response.json({ error: "Failed to initialize subscription" }, { status: 500 });
-
-  const today = getTodayKey();
-
-  if (!examPurchased) {
-    if (sub.free_messages_date !== today) {
-      await supabase.from("subscriptions").update({ free_messages_used: 0, free_messages_date: today }).eq("user_id", user.id);
-      sub.free_messages_used = 0;
-    }
-    if (sub.free_messages_used >= FREE_DAILY_LIMIT) {
-      return Response.json({ error: "daily_limit", message: "You have used all free messages for today.", remaining: 0, resets_at: "midnight" }, { status: 402 });
-    }
-    // Atomic increment — prevents race condition with concurrent requests
-    const { data: updated, error: incError } = await supabase.rpc("increment_free_messages", { p_user_id: user.id, p_limit: FREE_DAILY_LIMIT });
-    if (incError || !updated) {
-      // Fallback to non-atomic if RPC doesn't exist yet
-      await supabase.from("subscriptions").update({ free_messages_used: sub.free_messages_used + 1 }).eq("user_id", user.id);
-    }
-  }
 
   await supabase.from("messages").insert({ user_id: user.id, role: "user", content: message.trim().slice(0, 10000) });
 
@@ -132,7 +99,7 @@ export async function POST(req: NextRequest) {
     })) || [];
 
   const isAssessment = !patientProfile?.assessment_completed;
-  const systemPrompt = buildSystemPrompt(patientProfile as PatientProfile | null, isAssessment, examPurchased);
+  const systemPrompt = buildSystemPrompt(patientProfile as PatientProfile | null, isAssessment, true);
 
   const stream = streamLLMResponse(systemPrompt, conversationHistory, message.trim(), async (fullResponse) => {
     await supabase.from("messages").insert({
