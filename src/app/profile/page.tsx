@@ -122,7 +122,16 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user || !session) return null;
+  if (!user || !session) {
+    // Show loading while redirect fires — prevents flash of landing content
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-[15px]" style={{ color: "rgba(140,230,180,0.6)", textShadow: "0 0 8px rgba(140,230,180,0.2)" }}>
+          Paracelsus is preparing...
+        </p>
+      </div>
+    );
+  }
 
   // ToS check
   const tosAccepted = tosConfirmed || !!(profile?.tos_accepted_at);
