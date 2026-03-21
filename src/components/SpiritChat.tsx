@@ -174,7 +174,6 @@ export default function SpiritChat({
     } finally {
       setIsStreaming(false);
       inputRef.current?.focus();
-      setTimeout(() => { onLifespanUpdate(lifespanYears); }, 2000);
     }
   }
 
