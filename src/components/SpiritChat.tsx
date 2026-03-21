@@ -29,7 +29,6 @@ interface SpiritChatProps {
   onPaywall: () => void;
   freeMessagesUsed: number;
   freeMessagesLimit: number;
-  subscriptionStatus: string;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
@@ -47,7 +46,6 @@ export default function SpiritChat({
   onPaywall,
   freeMessagesUsed,
   freeMessagesLimit,
-  subscriptionStatus,
   messages,
   setMessages,
 }: SpiritChatProps) {
@@ -64,10 +62,8 @@ export default function SpiritChat({
   // Sync when prop changes (e.g. page refresh)
   useEffect(() => { setLocalUsed(freeMessagesUsed); }, [freeMessagesUsed]);
 
-  const isPaid = subscriptionStatus === "active";
-  const remaining = isPaid ? null : Math.max(0, freeMessagesLimit - localUsed);
-  // Show CTA banner only if exam not purchased AND not already paid subscriber
-  const showCtaBanner = !examPurchased && !isPaid;
+  const remaining = examPurchased ? null : Math.max(0, freeMessagesLimit - localUsed);
+  const showCtaBanner = !examPurchased;
 
   // ── Keyboard detection via visualViewport ──
   useEffect(() => {
@@ -99,7 +95,7 @@ export default function SpiritChat({
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
     setIsStreaming(true);
-    if (!isPaid) setLocalUsed((prev) => prev + 1);
+    if (!examPurchased) setLocalUsed((prev) => prev + 1);
 
     try {
       const res = await fetch("/api/chat", {

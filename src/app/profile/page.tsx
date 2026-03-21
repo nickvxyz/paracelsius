@@ -216,7 +216,6 @@ export default function ProfilePage() {
           onPaywall={() => {}}
           freeMessagesUsed={(sub?.free_messages_used as number) ?? 0}
           freeMessagesLimit={(sub?.free_messages_limit as number) ?? 30}
-          subscriptionStatus={(sub?.status as string) ?? "free"}
           messages={chatMessages}
           setMessages={setChatMessages}
         />

@@ -91,6 +91,10 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  const { data: patientProfile } = await supabase.from("patient_profiles").select("*").eq("user_id", user.id).single();
+  const examPurchased = patientProfile?.exam_purchased ?? false;
+
+  // Free message limiting — only for users who haven't purchased the exam
   let { data: sub } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).single();
   if (!sub) {
     const { data: newSub } = await supabase.from("subscriptions").insert({
@@ -101,9 +105,8 @@ export async function POST(req: NextRequest) {
   if (!sub) return Response.json({ error: "Failed to initialize subscription" }, { status: 500 });
 
   const today = getTodayKey();
-  const isPaid = sub.status === "active";
 
-  if (!isPaid) {
+  if (!examPurchased) {
     if (sub.free_messages_date !== today) {
       await supabase.from("subscriptions").update({ free_messages_used: 0, free_messages_date: today }).eq("user_id", user.id);
       sub.free_messages_used = 0;
@@ -116,12 +119,9 @@ export async function POST(req: NextRequest) {
 
   await supabase.from("messages").insert({ user_id: user.id, role: "user", content: message.trim() });
 
-  if (!isPaid) {
+  if (!examPurchased) {
     await supabase.from("subscriptions").update({ free_messages_used: sub.free_messages_used + 1 }).eq("user_id", user.id);
   }
-
-  const { data: patientProfile } = await supabase.from("patient_profiles").select("*").eq("user_id", user.id).single();
-  const examPurchased = patientProfile?.exam_purchased ?? false;
 
   const { data: recentMessages } = await supabase
     .from("messages").select("role, content").eq("user_id", user.id)
