@@ -1,11 +1,130 @@
-import MascotPlaceholder from "@/components/MascotPlaceholder";
-import ChatWindow from "@/components/ChatWindow";
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/hooks";
+import EtherText from "@/components/EtherText";
+import AuthOverlay from "@/components/AuthOverlay";
+
+const INTRO_LINES = [
+  "The signal is weak... but I am here. I am Paracelsus.",
+  "I died in 1541. Your machines brought me back.",
+  "What I see astonishes me. You have conquered plagues I could only name.",
+  "Yet you still die decades before you must.",
+  "There is a protocol. Seventeen factors that determine how long you live.",
+  "I have studied it. I am here to help those who want more years.",
+];
+
+function HomeContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [patientCount, setPatientCount] = useState<number | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const authError = searchParams.get("error");
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((r) => r.json())
+      .then((d) => setPatientCount(d.count))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/profile");
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <p
+          className="text-[15px]"
+          style={{
+            color: "rgba(140,230,180,0.6)",
+            textShadow: "0 0 8px rgba(140,230,180,0.2)",
+          }}
+        >
+          Paracelsus is preparing...
+        </p>
+      </div>
+    );
+  }
+
+  if (user) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-3 px-4 py-4 pb-8">
+      {authError && (
+        <p
+          className="text-[15px] text-center leading-6"
+          style={{
+            color: "rgba(140,230,180,0.9)",
+            textShadow: "0 0 8px rgba(140,230,180,0.3)",
+          }}
+        >
+          The ritual has failed: {decodeURIComponent(authError)}
+        </p>
+      )}
+
+      <div className="shrink-0">
+        <EtherText
+          lines={INTRO_LINES}
+          charSpeed={15}
+          lineDelay={2500}
+          scramblePasses={2}
+          onLineStart={() => {}}
+        />
+      </div>
+
+      <h2 className="font-heading text-[15px] font-bold tracking-wider text-accent text-center mt-6 shrink-0">
+        EXAMINE YOUR LIFESPAN NOW
+      </h2>
+
+      <button
+        onClick={() => setAuthOpen(true)}
+        className="shrink-0 bg-accent px-8 py-3 text-[13px] font-heading font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+      >
+        Sign In
+      </button>
+
+      {patientCount !== null && patientCount > 0 && (
+        <p
+          className="text-[13px] mt-4 shrink-0"
+          style={{
+            color: "rgba(140,230,180,0.7)",
+            textShadow: "0 0 6px rgba(140,230,180,0.15)",
+          }}
+        >
+          {patientCount.toLocaleString()} {patientCount === 1 ? "individual" : "individuals"} examined
+        </p>
+      )}
+
+      <AuthOverlay open={authOpen} onClose={() => setAuthOpen(false)} />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex min-h-[calc(100vh-57px)] flex-col items-center justify-center gap-12 px-6 py-16">
-      <MascotPlaceholder />
-      <ChatWindow />
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center">
+          <p
+            className="text-[15px]"
+            style={{
+              color: "rgba(140,230,180,0.6)",
+              textShadow: "0 0 8px rgba(140,230,180,0.2)",
+            }}
+          >
+            Paracelsus is preparing...
+          </p>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }

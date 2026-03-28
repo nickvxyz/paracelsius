@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Orbitron, Space_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import Nav from "@/components/Nav";
-import EmberParticles from "@/components/EmberParticles";
+import AppShell from "@/components/AppShell";
 import "./globals.css";
 
 const orbitron = Orbitron({
@@ -18,18 +17,18 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Paracelsius",
+  title: "Paracelsus",
   description:
     "An ancient physician reborn digitally. He calculates your lifespan. You pay him to survive.",
   openGraph: {
-    title: "Paracelsius",
+    title: "Paracelsus",
     description:
       "An ancient physician reborn digitally. He calculates your lifespan. You pay him to survive.",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Paracelsius",
+    title: "Paracelsus",
     description:
       "An ancient physician reborn digitally. He calculates your lifespan. You pay him to survive.",
   },
@@ -37,6 +36,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#ff6b1a",
+  viewportFit: "cover",
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -49,9 +51,7 @@ export default function RootLayout({
       <body
         className={`${orbitron.variable} ${spaceMono.variable} antialiased`}
       >
-        <EmberParticles />
-        <Nav />
-        <main className="relative z-10">{children}</main>
+        <AppShell>{children}</AppShell>
         <Analytics />
       </body>
     </html>
